@@ -46,6 +46,7 @@ function createWindow() {
   win.on('close', async () => {
     console.log('Window is closing, unloading board...')
     await board.close()
+    app.exit(0)
   })
 
   if (VITE_DEV_SERVER_URL) {
