@@ -1,0 +1,84 @@
+import {Sim} from "./simconnect/sim.ts";
+import {BoardInterface, BoardInterfaceType, BoardItem} from "../shared/board.types.ts";
+import Device, {BoardInterfaceChangeCallback} from "./usb/device.ts";
+import {Descriptor, EventCallback} from "@shared/sim.types.ts";
+import {getCallback} from "@shared/callback-registry.ts";
+
+export default class Board {
+    private device : Device;
+    private listeners = new Map<string, (id : string, value: number) => void>();
+
+    constructor(private sim : Sim, vendorId: number, productId: number, items : BoardItem[]) {
+        const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
+        this.device = new Device(vendorId, productId, interfaces);
+        for (const item of items) {
+            // Register into the sim the board items that have a sim property
+            if (item.sim) {
+                const d = {
+                    swid : item.id,
+                    hwid: item.sim.offset,
+                    type: item.sim.type,
+                    callback: (cbDescriptor, value) => {
+                        if (item.onSimReadFnName) {
+                            const dalCallback = getCallback<EventCallback>(item.onSimReadFnName)
+                            if (dalCallback) {
+                                console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
+                                dalCallback(cbDescriptor, value);
+                            }
+                        }
+                        if (item.sim?.type == "event" || item.sim?.type == "data") {
+                            const eventCallback = this.listeners.get(item.id);
+                            if (eventCallback) {
+                                console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
+                                eventCallback(item.id, value);
+                            }
+                        }
+                    }
+                } as Descriptor
+
+                this.sim.register(d)
+            }
+            // Register the item to the hw device if it has an interface
+            if (item.iface) {
+                this.device.onChange(item.iface.id, (value) => {
+                    if (item.onDeviceReadFnName) {
+                        const dalCallback = getCallback<BoardInterfaceChangeCallback>(item.onDeviceReadFnName)
+                        if (dalCallback) {
+                            console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
+                            dalCallback(value);
+                        }
+                    }
+                    if (item.iface?.type == BoardInterfaceType.BUTTON) {
+                        const eventCallback = this.listeners.get(item.id);
+                        if (eventCallback) {
+                            console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
+                            eventCallback(item.id, value.value);
+                        }
+                    }
+
+                    // TODO: Remove
+                    // if (value.value === 1) {
+                    //     console.info(`triggering ${item.id} with value ${value.value} to sim`);
+                    //     this.sim.trigger(item.id, value.value);
+                    // }
+                })
+            }
+        }
+    }
+
+    async open() {
+        await this.device.open();
+    }
+
+    async close() {
+        await this.device.close();
+    }
+
+    public onChange(id: string, callback: (id: string, value: number) => void) {
+        if (this.listeners.has(id)) {
+            console.warn(`Listener for ${id} already exists`);
+            return;
+        }
+        this.listeners.set(id, callback);
+    }
+}
