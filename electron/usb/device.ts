@@ -17,6 +17,9 @@ export default class Device {
     private device: HID | null = null;
     private listeners = new Map<string, (value: BoardInterfaceValue) => void>();
 
+    constructor(private vendorId: number, private productId: number, private interfaces: BoardInterface[], private pollingMs: number = 1000) {
+    }
+
     static list(): UsbDevice[] {
         return devices().map(device => {
             return {
@@ -25,9 +28,6 @@ export default class Device {
                 product: device.product || 'Unknown Device'
             }
         })
-    }
-
-    constructor(private vendorId: number, private productId: number, private interfaces: BoardInterface[], private pollingMs: number = 1000) {
     }
 
     public async open() {
@@ -48,6 +48,57 @@ export default class Device {
 
         if (this.pollingMs >= 0) {
             await this.startPolling();
+        }
+    }
+
+    async trigger(id: string, value: number): Promise<BoardInterface> {
+        if (!this.device) {
+            throw new Error('Device not opened');
+        }
+
+        const iface = this.interfaces.find(i => i?.id === id);
+        if (!iface) {
+            throw new Error(`Interface with id ${id} not found`);
+        }
+
+        if (iface?.type !== BoardInterfaceType.LED) {
+            throw new Error(`Interface with id ${id} is not a LED`);
+        }
+
+        const led = iface as BoardLed;
+
+        // Example command to send to the device
+        const cmd = CMD_TRIGGER_PIN; // Example command for triggering a button
+        const data = [led?.offset, value !== 0 ? 1 : 0]; // Example data format
+
+        await this.sendCmd(cmd, data);
+
+        return iface
+    }
+
+    onChange(id: string, callback: BoardInterfaceChangeCallback) {
+        if (this.listeners.has(id)) {
+            console.warn(`Listener for ${id} already exists`);
+            return;
+        }
+
+        this.listeners.set(id, callback);
+    }
+
+    offChange(id: string) {
+        if (!this.listeners.has(id)) {
+            console.warn(`No listener for ${id} found`);
+            return;
+        }
+
+        this.listeners.delete(id);
+    }
+
+    async close() {
+        if (this.device) {
+            this.device.close();
+            this.device = null;
+            console.log(`Device closed: ${this.vendorId}:${this.productId}`);
         }
     }
 
@@ -107,57 +158,6 @@ export default class Device {
                     }
                 }
             }
-        }
-    }
-
-    async trigger(id: string, value: number): Promise<BoardInterface> {
-        if (!this.device) {
-            throw new Error('Device not opened');
-        }
-
-        const iface = this.interfaces.find(i => i?.id === id);
-        if (!iface) {
-            throw new Error(`Interface with id ${id} not found`);
-        }
-
-        if (iface?.type !== BoardInterfaceType.LED) {
-            throw new Error(`Interface with id ${id} is not a LED`);
-        }
-
-        const led = iface as BoardLed;
-
-        // Example command to send to the device
-        const cmd = CMD_TRIGGER_PIN; // Example command for triggering a button
-        const data = [led?.offset, value !== 0 ? 1 : 0]; // Example data format
-
-        await this.sendCmd(cmd, data);
-
-        return iface
-    }
-
-    onChange(id: string, callback: BoardInterfaceChangeCallback) {
-        if (this.listeners.has(id)) {
-            console.warn(`Listener for ${id} already exists`);
-            return;
-        }
-
-        this.listeners.set(id, callback);
-    }
-
-    offChange(id: string) {
-        if (!this.listeners.has(id)) {
-            console.warn(`No listener for ${id} found`);
-            return;
-        }
-
-        this.listeners.delete(id);
-    }
-
-    async close() {
-        if (this.device) {
-            this.device.close();
-            this.device = null;
-            console.log(`Device closed: ${this.vendorId}:${this.productId}`);
         }
     }
 

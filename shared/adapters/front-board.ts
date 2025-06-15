@@ -1,10 +1,10 @@
 import {BoardItem} from "@shared/board.types.ts";
-import {GenericResponse, InitBoardProps} from "@shared/adapters/ipc.types.ts";
+import {GenericResponse, InitBoardProps, TriggerBoardProps} from "@shared/adapters/ipc.types.ts";
 
 // FrontBoard
 export default class FrontBoard {
 
-    constructor(private readonly ipcRenderer : Electron.IpcRenderer) {
+    constructor(private readonly ipcRenderer: Electron.IpcRenderer) {
 
     }
 
@@ -14,8 +14,7 @@ export default class FrontBoard {
     }
 
 
-
-    async registerBoard(id : string, vid : number, pid : number, items: BoardItem[]) {
+    async registerBoard(id: string, vid: number, pid: number, items: BoardItem[]) {
         const res = await this.ipcRenderer.invoke('init-board', {
             id: id,
             productId: pid,
@@ -54,7 +53,12 @@ export default class FrontBoard {
     async triggerItem(id: string, itemId: string, value: number) {
         // Trigger an item on the board with the given id and value
         console.info(`Triggering item ${itemId} on board ${id} with value ${value}`);
-        const res = await this.ipcRenderer.invoke('trigger-board', {id: id, itemId: itemId, value: value}) as GenericResponse;
+        const req: TriggerBoardProps = {
+            id: id,
+            itemId: itemId,
+            value: value
+        }
+        const res = await this.ipcRenderer.invoke('trigger-board', req) as GenericResponse;
         if (!res || !res.success) {
             console.error("Failed to trigger item:", res.error);
             throw new Error(`Failed to trigger item: ${res.error}`);

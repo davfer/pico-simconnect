@@ -5,17 +5,17 @@ import {Descriptor, EventCallback} from "@shared/sim.types.ts";
 import {getCallback} from "@shared/callback-registry.ts";
 
 export default class Board {
-    private device : Device;
-    private listeners = new Map<string, (id : string, value: number) => void>();
+    private device: Device;
+    private listeners = new Map<string, (id: string, value: number) => void>();
 
-    constructor(private sim : Sim, vendorId: number, productId: number, items : BoardItem[]) {
+    constructor(private sim: Sim, vendorId: number, productId: number, private items: BoardItem[]) {
         const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
         this.device = new Device(vendorId, productId, interfaces);
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
                 const d = {
-                    swid : item.id,
+                    swid: item.id,
                     hwid: item.sim.offset,
                     type: item.sim.type,
                     callback: (cbDescriptor, value) => {
@@ -80,5 +80,23 @@ export default class Board {
             return;
         }
         this.listeners.set(id, callback);
+    }
+
+    public trigger(id: string, value: number) {
+        if (!this.device) {
+            throw new Error('Device not opened');
+        }
+
+        const item = this.items.find(i => i.id === id);
+        if (!item) {
+            throw new Error(`Item with id ${id} not found`);
+        }
+
+        if (item.iface && item.iface.type === BoardInterfaceType.LED) {
+            return this.device.trigger(item.iface.id, value);
+        }
+        if (item.sim && (item.sim.type === "write")) {
+            return this.sim.trigger(item.id, value);
+        }
     }
 }

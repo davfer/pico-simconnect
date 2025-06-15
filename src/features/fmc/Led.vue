@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 const props = defineProps<{
   value?: boolean;
   color?: "red" | "green" | "blue" | "yellow" | "white";
@@ -7,32 +7,33 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="led" :class="[props.type, props.color ? `led--${props.color}` : '']">
+  <div :class="[props.type, props.color ? `led--${props.color}` : '']" class="led">
     <span v-if="props.value" class="text-white">●</span>
   </div>
 </template>
 
 <style scoped>
-  .led {
-    width: 16px;
-    height: 16px;
-    background: black;
-  }
+.led {
+  width: 16px;
+  height: 16px;
+  background: black;
+}
 
-  .led.square {
-    border-radius: 0;
-  }
+.led.square {
+  border-radius: 0;
+}
 
-  .led.vrectangle {
-    width: 32px;
-    height: 16px;
-    rotate: 90deg;
-  }
+.led.vrectangle {
+  width: 32px;
+  height: 16px;
+  rotate: 90deg;
+}
 
-  .led--red {
-    background: red;
-  }
-  .led--green {
-    background: green;
-  }
+.led--red {
+  background: red;
+}
+
+.led--green {
+  background: green;
+}
 </style>

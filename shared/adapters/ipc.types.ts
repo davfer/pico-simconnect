@@ -11,3 +11,9 @@ export interface GenericResponse {
     success: boolean;
     error?: string;
 }
+
+export interface TriggerBoardProps {
+    id: string;
+    itemId: string;
+    value: number;
+}

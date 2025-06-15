@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 
 const props = defineProps<{
   connected: boolean;
@@ -12,12 +12,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="flex flex-row border-2 p-2 m-2 items-center justify-between">
-      <span><strong>Board</strong></span>
-      <span class="ml-1 grow">{{ status }}</span>
-      <button v-if="!connected" class="btn btn-sm btn-success" @click="$emit('connect')">Connect</button>
-      <button v-else class="btn btn-sm btn-danger" @click="$emit('disconnect')">Disconnect</button>
-    </div>
+  <div class="flex flex-row border-2 p-2 m-2 items-center justify-between">
+    <span><strong>Board</strong></span>
+    <span class="ml-1 grow">{{ status }}</span>
+    <button v-if="!connected" class="btn btn-sm btn-success" @click="$emit('connect')">Connect</button>
+    <button v-else class="btn btn-sm btn-danger" @click="$emit('disconnect')">Disconnect</button>
+  </div>
 </template>
 
 <style scoped>

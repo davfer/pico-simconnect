@@ -1,8 +1,8 @@
 import Board from "@electron/board";
-import {InitBoardProps} from "@shared/adapters/ipc.types.ts";
-import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
+import {InitBoardProps, TriggerBoardProps} from "@shared/adapters/ipc.types.ts";
 import {Sim} from "@electron/simconnect/sim.ts";
 import {BrowserWindow} from "electron";
+import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
 
 export class BackBoard {
     private boards = new Map<string, Board>();
@@ -48,14 +48,15 @@ export class BackBoard {
 
             return {success: true}
         })
-        // ipc.on('trigger-board', (id: string, itemId: string, value: number) => {
-        //     const board = this.boards.get(id);
-        //     if (!board) {
-        //         console.warn(`Board with id ${id} not found.`);
-        //         return;
-        //     }
-        //     board.trigger(itemId, value);
-        // });
+        ipc.on('trigger-board', (_: IpcMainInvokeEvent, args: TriggerBoardProps) => {
+            const {id, itemId, value} = args;
+            const board = this.boards.get(id);
+            if (!board) {
+                console.warn(`Board with id ${id} not found.`);
+                return;
+            }
+            board.trigger(itemId, value);
+        });
     }
 
     async close() {

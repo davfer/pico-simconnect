@@ -104,30 +104,6 @@ export class Sim {
         }
     }
 
-    private subscribeToSim(_: Descriptor) {
-        if (!this.sim) {
-            throw new Error('SimConnect not connected');
-        }
-
-        // if (descriptor.type === 'event') {
-        //     this.sim.addClientEventToNotificationGroup(
-        //         SimConnectConstants.OBJECT_ID_USER,
-        //         descriptor.hwid,
-        //         descriptor.swid
-        //     );
-        // } else if (descriptor.type === 'data') {
-        //     this.sim.requestClientData(
-        //         SimConnectConstants.OBJECT_ID_USER,
-        //         descriptor.hwid,
-        //         descriptor.swid,
-        //         0, // Flags
-        //         0 // Request ID
-        //     );
-        // } else {
-        //     throw new Error(`Unknown descriptor type: ${descriptor.type}`);
-        // }
-    }
-
     public register(descriptor: Descriptor) {
         if (this.definitions.some(d => d.swid === descriptor.swid)) {
             throw new Error(`Watcher with ID ${descriptor.swid} already registered`);
@@ -156,5 +132,29 @@ export class Sim {
             0,
             EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
         );
+    }
+
+    private subscribeToSim(_: Descriptor) {
+        if (!this.sim) {
+            throw new Error('SimConnect not connected');
+        }
+
+        // if (descriptor.type === 'event') {
+        //     this.sim.addClientEventToNotificationGroup(
+        //         SimConnectConstants.OBJECT_ID_USER,
+        //         descriptor.hwid,
+        //         descriptor.swid
+        //     );
+        // } else if (descriptor.type === 'data') {
+        //     this.sim.requestClientData(
+        //         SimConnectConstants.OBJECT_ID_USER,
+        //         descriptor.hwid,
+        //         descriptor.swid,
+        //         0, // Flags
+        //         0 // Request ID
+        //     );
+        // } else {
+        //     throw new Error(`Unknown descriptor type: ${descriptor.type}`);
+        // }
     }
 }
