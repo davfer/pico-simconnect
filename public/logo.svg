@@ -1,0 +1,26 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle -->
+    <circle cx="150" cy="150" r="100" fill="#e0f0ff" stroke="#007acc" stroke-width="3" />
+
+    <!-- Plane (top-down silhouette, centered) -->
+    <path d="M147 60
+           L153 60
+           L155 120
+           L175 140
+           L175 150
+           L155 150
+           L155 180
+           L165 200
+           L165 210
+           L150 200
+           L135 210
+           L135 200
+           L145 180
+           L145 150
+           L125 150
+           L125 140
+           L145 120
+           L147 60
+           Z"
+          fill="#333" />
+</svg>
