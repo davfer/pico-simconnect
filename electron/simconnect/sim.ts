@@ -1,5 +1,13 @@
-import {EventFlag, open, Protocol, RecvEvent, SimConnectConnection, SimConnectConstants} from "node-simconnect";
-import {Descriptor} from "@shared/sim.types.ts";
+import {
+    ClientDataPeriod, ClientDataRequestFlag,
+    EventFlag,
+    open,
+    Protocol,
+    RecvEvent,
+    SimConnectConnection,
+    SimConnectConstants
+} from "node-simconnect";
+import {CduDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
 
 const EVENT_ID_PAUSE = 1;
 
@@ -32,7 +40,7 @@ export class Sim {
                     break;
             }
 
-            const def = this.definitions.find(d => d.hwid === recvEvent.clientEventId);
+            const def = this.definitions.find(d => d.simid === recvEvent.clientEventId);
             if (!def || !def.callback) {
                 console.debug(`Received event with untracked ID: ${recvEvent.clientEventId}`);
                 return
@@ -45,7 +53,7 @@ export class Sim {
         });
         this.sim.on('clientData', recvSimObjectData => {
             console.log("Received client data:", recvSimObjectData);
-            const def = this.definitions.find(d => d.hwid === recvSimObjectData.requestID);
+            const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID);
             if (!def || !def.callback) {
                 console.debug(`Received data with untracked ID: ${recvSimObjectData.requestID}`);
                 return;
@@ -55,20 +63,10 @@ export class Sim {
             } catch (error) {
                 // not our problem
             }
-            // TODO: FMC
-            // if (recvSimObjectData.requestID === RequestID.CDU_SCREEN_DATA_REQUEST) {
-            //     const { powered, lines } = extractCduScreenState(recvSimObjectData.data);
-            //     if (powered) {
-            //         console.log(lines.join('\r\n'));
-            //     } else {
-            //         console.log('Not powered');
-            //     }
-            // }
         });
         this.sim.on('exception', function (recvException) {
             console.log(recvException);
         });
-
 
         this.sim.on('quit', () => {
             console.log('The simulator quit.');
@@ -105,8 +103,8 @@ export class Sim {
     }
 
     public register(descriptor: Descriptor) {
-        if (this.definitions.some(d => d.swid === descriptor.swid)) {
-            throw new Error(`Watcher with ID ${descriptor.swid} already registered`);
+        if (this.definitions.some(d => d.id === descriptor.id)) {
+            throw new Error(`Watcher with ID ${descriptor.id} already registered`);
         }
         this.definitions.push(descriptor);
 
@@ -120,41 +118,52 @@ export class Sim {
             throw new Error('SimConnect not connected');
         }
 
-        const def = this.definitions.find(d => d.swid === id);
+        const def = this.definitions.find(d => d.id === id);
         if (!def) {
             throw new Error(`No definition found for ID: ${id}`);
         }
 
         this.sim.transmitClientEvent(
             SimConnectConstants.OBJECT_ID_USER,
-            def.hwid,
+            def.simid,
             value,
             0,
             EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
         );
     }
 
-    private subscribeToSim(_: Descriptor) {
+    private subscribeToSim(descriptor: Descriptor) {
         if (!this.sim) {
             throw new Error('SimConnect not connected');
         }
 
-        // if (descriptor.type === 'event') {
-        //     this.sim.addClientEventToNotificationGroup(
-        //         SimConnectConstants.OBJECT_ID_USER,
-        //         descriptor.hwid,
-        //         descriptor.swid
-        //     );
-        // } else if (descriptor.type === 'data') {
-        //     this.sim.requestClientData(
-        //         SimConnectConstants.OBJECT_ID_USER,
-        //         descriptor.hwid,
-        //         descriptor.swid,
-        //         0, // Flags
-        //         0 // Request ID
-        //     );
-        // } else {
-        //     throw new Error(`Unknown descriptor type: ${descriptor.type}`);
-        // }
+        if (descriptor.type === 'event') {
+            // this.sim.addClientEventToNotificationGroup(
+            //     SimConnectConstants.OBJECT_ID_USER,
+            //     descriptor.hwid,
+            //     descriptor.simid
+            // );
+        } else if (descriptor.type === 'cdu') {
+            const cduDescriptor = descriptor as CduDescriptor;
+            this.sim.mapClientDataNameToID(cduDescriptor.dataName, cduDescriptor.dataId);
+            this.sim.addToClientDataDefinition(cduDescriptor.dataDefinition, 0, cduDescriptor.size);
+            this.sim.requestClientData(
+                cduDescriptor.dataId,
+                cduDescriptor.simid,
+                cduDescriptor.dataDefinition,
+                ClientDataPeriod.ON_SET,
+                ClientDataRequestFlag.CLIENT_DATA_REQUEST_FLAG_CHANGED
+            );
+        }else if (descriptor.type === 'write') {
+            const writeDescriptor = descriptor as WriteDescriptor;
+            this.sim.mapClientEventToSimEvent(
+                descriptor.simid,
+                '#' + writeDescriptor.hwid,
+            );
+        } else {
+            throw new Error(`Unknown descriptor type: ${descriptor.type}`);
+        }
+
+        this.definitions.push(descriptor)
     }
 }

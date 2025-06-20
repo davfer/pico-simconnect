@@ -2,7 +2,7 @@
 import Screen from "./Screen.vue";
 import Button from "./Button.vue";
 import Led from "./Led.vue";
-import {Pixel} from "./fmt.types.ts";
+import {Pixel} from "./fmc.types.ts";
 import {onUnmounted, reactive, ref} from "vue";
 import {BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
 import {
@@ -25,6 +25,9 @@ import {
 } from "@shared/definitions/PMDG_NGX_SDK.ts";
 import FrontBoard from "@shared/adapters/front-board.ts";
 import CommandBar from "@src/components/CommandBar.vue";
+import {CduDescriptor, Descriptor, EventCallback, OnSimReadEventCallback} from "@shared/sim.types.ts";
+import {PMDG_NG3_CDU_0_DEFINITION, PMDG_NG3_CDU_0_ID, PMDG_NG3_CDU_0_NAME} from "@shared/definitions/PMDG_NG3_SDK.ts";
+import {registerCallback} from "@shared/callback-registry.ts";
 
 const props = defineProps<{
   board: FrontBoard
@@ -180,7 +183,31 @@ const layout = [
     iface: {id: 'b_clr', type: BoardInterfaceType.BUTTON, offset: 7},
     sim: {offset: EVT_CDU_L_CLR, type: "write"}
   },
+  {
+    id: "CDU_SCREEN",
+    onSimReadFnName: "CDU_SCREEN_READ",
+    front: {},
+    iface: {},
+    sim: {
+      id: "PMDG_NG3_CDU_0",
+      type: "cdu",
+      size: (() => {
+        const CDU_COLUMNS = 24;
+        const CDU_ROWS = 14;
+        return CDU_COLUMNS * CDU_ROWS * (1 + 1 + 1) + 1;
+      })(),
+      dataName: PMDG_NG3_CDU_0_NAME,
+      dataId: PMDG_NG3_CDU_0_ID,
+      dataDefinition: PMDG_NG3_CDU_0_DEFINITION,
+    } as CduDescriptor
+  }
 ] as BoardItem[]
+
+function CduScreenReadFn(descriptor: Descriptor, value: any) {
+  console.log(descriptor, value)
+}
+registerCallback<OnSimReadEventCallback>("CDU_SCREEN_READ", CduScreenReadFn);
+
 
 const screenGrid = reactive(Array.from({length: 14}, () =>
     Array.from({length: 24}, () => ({char: "A", color: "white"}))

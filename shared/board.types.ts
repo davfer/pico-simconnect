@@ -1,4 +1,4 @@
-import {SimOffset} from "@shared/sim.types.ts";
+import {Descriptor} from "@shared/sim.types.ts";
 
 export interface ButtonItem {
     value: string;
@@ -9,7 +9,7 @@ export interface BoardItem {
     id: string
     front?: ButtonItem;
     iface?: BoardInterface
-    sim?: SimOffset
+    sim?: Descriptor
 
     // Direct Access Logic (use registry to allow serialization)
     onSimReadFnName?: string

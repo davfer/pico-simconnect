@@ -1,13 +1,23 @@
-export type EventCallback = (descriptor: Descriptor, value: any) => void
+import Device from "@electron/usb/device.ts";
 
-export interface SimOffset {
-    offset: number;
-    type: 'event' | 'data' | 'write';
-}
+export type EventCallback = (descriptor: Descriptor, value: any) => void
+export type OnSimReadEventCallback = (descriptor: Descriptor, device: Device, value: any) => void
+
 
 export interface Descriptor {
-    swid: string;
-    hwid: number;
-    callback: EventCallback;
-    type: 'event' | 'data' | 'write';
+    id: string; // Unique identifier for the descriptor
+    simid: number; // ClientEventID (RequestID)
+    callback?: EventCallback;
+    type: 'event' | 'data' | 'write' | 'cdu';
+}
+
+export interface WriteDescriptor extends Descriptor {
+    hwid: number; // eventNameID
+}
+
+export interface CduDescriptor extends Descriptor {
+    size: number; // Size of the CDU data
+    dataName: string; // Name of the CDU data
+    dataId: number; // ID of the CDU data
+    dataDefinition: number; // Definition of the CDU data
 }

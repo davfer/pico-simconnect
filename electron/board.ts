@@ -1,11 +1,11 @@
 import {Sim} from "./simconnect/sim.ts";
 import {BoardInterface, BoardInterfaceType, BoardItem} from "../shared/board.types.ts";
 import Device, {BoardInterfaceChangeCallback} from "./usb/device.ts";
-import {Descriptor, EventCallback} from "@shared/sim.types.ts";
+import {OnSimReadEventCallback} from "@shared/sim.types.ts";
 import {getCallback} from "@shared/callback-registry.ts";
 
 export default class Board {
-    private device: Device;
+    private readonly device: Device;
     private listeners = new Map<string, (id: string, value: number) => void>();
 
     constructor(private sim: Sim, vendorId: number, productId: number, private items: BoardItem[]) {
@@ -14,29 +14,24 @@ export default class Board {
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
-                const d = {
-                    swid: item.id,
-                    hwid: item.sim.offset,
-                    type: item.sim.type,
-                    callback: (cbDescriptor, value) => {
-                        if (item.onSimReadFnName) {
-                            const dalCallback = getCallback<EventCallback>(item.onSimReadFnName)
-                            if (dalCallback) {
-                                console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
-                                dalCallback(cbDescriptor, value);
-                            }
-                        }
-                        if (item.sim?.type == "event" || item.sim?.type == "data") {
-                            const eventCallback = this.listeners.get(item.id);
-                            if (eventCallback) {
-                                console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
-                                eventCallback(item.id, value);
-                            }
+                item.sim.callback = (cbDescriptor, value) => {
+                    if (item.onSimReadFnName) {
+                        const dalCallback = getCallback<OnSimReadEventCallback>(item.onSimReadFnName)
+                        if (dalCallback) {
+                            console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
+                            dalCallback(cbDescriptor, this.device, value);
                         }
                     }
-                } as Descriptor
+                    if (item.sim?.type == "event" || item.sim?.type == "data") {
+                        const eventCallback = this.listeners.get(item.id);
+                        if (eventCallback) {
+                            console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
+                            eventCallback(item.id, value);
+                        }
+                    }
+                }
 
-                this.sim.register(d)
+                this.sim.register(item.sim)
             }
             // Register the item to the hw device if it has an interface
             if (item.iface) {

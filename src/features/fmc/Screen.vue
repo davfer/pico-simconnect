@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Pixel} from "./fmt.types.ts";
+import {Pixel} from "./fmc.types.ts";
 
 const props = defineProps<{
   grid: Pixel[][]
