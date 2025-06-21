@@ -33,3 +33,7 @@ export function extractCduScreenState(rawBuffer: RawBuffer): CduData {
         powered: cduIsPowered
     };
 }
+
+export const nativeCallbacks: Record<string, (data: any) => void> = {
+
+}

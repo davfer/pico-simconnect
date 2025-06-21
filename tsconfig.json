@@ -24,7 +24,8 @@
     "paths": {
       "@shared/*": ["shared/*"],
       "@electron/*": ["electron/*"],
-      "@src/*": ["src/*"]
+      "@src/*": ["src/*"],
+      "@callbacks/*": ["callbacks/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron"],

@@ -19,11 +19,11 @@ export class BackBoard {
                 return {success: true};
             } catch (err) {
                 console.error("BackBoard: Failed to initialize SimConnect:", err);
-                return {success: false, error: err.message};
+                return {success: false, error: err};
             }
         });
 
-        this.ipc.handle('init-board', (_: IpcMainInvokeEvent, args: InitBoardProps) => {
+        this.ipc.handle('init-board', async (_: IpcMainInvokeEvent, args: InitBoardProps) => {
             const {id, vendorId, productId, items} = args;
             if (this.boards.has(id)) {
                 console.warn(`BackBoard: Board with id '${id}' already initialized.`);
@@ -36,7 +36,7 @@ export class BackBoard {
                 console.info(`BackBoard: Board '${id}' opened successfully.`);
             } catch (err) {
                 console.error(`BackBoard: Failed to open board '${id}':`, err);
-                return {success: false, error: `Failed to open board '${id}': ${err.message}`};
+                return {success: false, error: `Failed to open board '${id}': ${err}`};
             }
 
             // attach frontend listeners
@@ -77,7 +77,7 @@ export class BackBoard {
                 return {success: true};
             } catch (err) {
                 console.error(`BackBoard: Failed to unregister board '${id}':`, err);
-                return {success: false, error: `Failed to unregister board '${id}': ${err.message}`};
+                return {success: false, error: `Failed to unregister board '${id}': ${err}`};
             }
         });
     }
@@ -95,7 +95,7 @@ export class BackBoard {
         this.boards.clear();
         console.info("BackBoard: All boards closed.");
 
-        if (this.sim.isConnected()) {
+        if (this.sim) {
             console.info("BackBoard: Disconnecting SimConnect...");
             await this.sim.disconnect();
             console.info("BackBoard: SimConnect disconnected.");

@@ -24,6 +24,7 @@ export default defineConfig({
             alias: {
               '@shared': path.resolve(__dirname, 'shared'),
               '@electron': path.resolve(__dirname, 'electron'),
+              '@callbacks': path.resolve(__dirname, 'callbacks'),
             },
           },
           build: {
