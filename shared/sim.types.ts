@@ -1,8 +1,4 @@
-import Device from "@electron/usb/device.ts";
-
 export type EventCallback = (descriptor: Descriptor, value: any) => void
-export type OnSimReadEventCallback = (descriptor: Descriptor, device: Device, value: any) => void
-
 
 export interface Descriptor {
     id: string; // Unique identifier for the descriptor

@@ -4,7 +4,7 @@ import Button from "./Button.vue";
 import Led from "./Led.vue";
 import {Pixel} from "./fmc.types.ts";
 import {onUnmounted, reactive, ref} from "vue";
-import {BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
+import {BoardButton, BoardInterface, BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
 import {
   EVT_CDU_L_CLR,
   EVT_CDU_L_DEL,
@@ -25,9 +25,12 @@ import {
 } from "@shared/definitions/PMDG_NGX_SDK.ts";
 import FrontBoard from "@shared/adapters/front-board.ts";
 import CommandBar from "@src/components/CommandBar.vue";
-import {CduDescriptor, Descriptor, EventCallback, OnSimReadEventCallback} from "@shared/sim.types.ts";
+import {CduDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
 import {PMDG_NG3_CDU_0_DEFINITION, PMDG_NG3_CDU_0_ID, PMDG_NG3_CDU_0_NAME} from "@shared/definitions/PMDG_NG3_SDK.ts";
 import {registerCallback} from "@shared/callback-registry.ts";
+import Device from "@electron/usb/device.ts";
+import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapters/ipc.types.ts";
+import {Sim} from "@electron/simconnect/sim.ts";
 
 const props = defineProps<{
   board: FrontBoard
@@ -86,102 +89,118 @@ const layout = [
   {id: "CDU_K", front: {style: "square", value: "K"}},
   {
     id: "CDU_L",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "L"},
-    iface: {id: 'b_l', type: BoardInterfaceType.BUTTON, offset: 3},
-    sim: {offset: EVT_CDU_L_L, type: "write"}
+    iface: {id: 'b_l', type: BoardInterfaceType.BUTTON, offset: 3} as BoardButton,
+    sim: {id: "cdu_L", simid: 1, hwid: EVT_CDU_L_L, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_M",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "M"},
-    iface: {id: 'b_m', type: BoardInterfaceType.BUTTON, offset: 2},
-    sim: {offset: EVT_CDU_L_M, type: "write"}
+    iface: {id: 'b_m', type: BoardInterfaceType.BUTTON, offset: 2} as BoardButton,
+    sim: {id: "cdu_M", hwid: EVT_CDU_L_M, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_N",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "N"},
-    iface: {id: 'b_n', type: BoardInterfaceType.BUTTON, offset: 1},
-    sim: {offset: EVT_CDU_L_N, type: "write"}
+    iface: {id: 'b_n', type: BoardInterfaceType.BUTTON, offset: 1} as BoardButton,
+    sim: {id: "cdu_N", hwid: EVT_CDU_L_N, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_O",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "O"},
-    iface: {id: 'b_o', type: BoardInterfaceType.BUTTON, offset: 0},
-    sim: {offset: EVT_CDU_L_O, type: "write"}
+    iface: {id: 'b_o', type: BoardInterfaceType.BUTTON, offset: 0} as BoardButton,
+    sim: {id: "cdu_O", hwid: EVT_CDU_L_O, type: "write"} as WriteDescriptor
   },
   {id: "CDU_P", front: {style: "square", value: "P"}},
   {
     id: "CDU_Q",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "Q"},
-    iface: {id: 'b_q', type: BoardInterfaceType.BUTTON, offset: 11},
-    sim: {offset: EVT_CDU_L_Q, type: "write"}
+    iface: {id: 'b_q', type: BoardInterfaceType.BUTTON, offset: 11} as BoardButton,
+    sim: {id: "cdu_Q", hwid: EVT_CDU_L_Q, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_R",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "R"},
-    iface: {id: 'b_r', type: BoardInterfaceType.BUTTON, offset: 10},
-    sim: {offset: EVT_CDU_L_R, type: "write"}
+    iface: {id: 'b_r', type: BoardInterfaceType.BUTTON, offset: 10} as BoardButton,
+    sim: {id: "cdu_R", hwid: EVT_CDU_L_R, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_S",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "S"},
-    iface: {id: 'b_s', type: BoardInterfaceType.BUTTON, offset: 9},
-    sim: {offset: EVT_CDU_L_S, type: "write"}
+    iface: {id: 'b_s', type: BoardInterfaceType.BUTTON, offset: 9} as BoardButton,
+    sim: {id: "cdu_S", hwid: EVT_CDU_L_S, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_T",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "T"},
-    iface: {id: 'b_t', type: BoardInterfaceType.BUTTON, offset: 8},
-    sim: {offset: EVT_CDU_L_T, type: "write"}
+    iface: {id: 'b_t', type: BoardInterfaceType.BUTTON, offset: 8} as BoardButton,
+    sim: {id: "cdu_T", hwid: EVT_CDU_L_T, type: "write"} as WriteDescriptor
   },
   {id: "CDU_U", front: {style: "square", value: "U"}},
   {
     id: "CDU_V",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "V"},
-    iface: {id: 'b_v', type: BoardInterfaceType.BUTTON, offset: 15},
-    sim: {offset: EVT_CDU_L_V, type: "write"}
+    iface: {id: 'b_v', type: BoardInterfaceType.BUTTON, offset: 15} as BoardButton,
+    sim: {id: "cdu_V", hwid: EVT_CDU_L_V, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_W",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "W"},
-    iface: {id: 'b_w', type: BoardInterfaceType.BUTTON, offset: 14},
-    sim: {offset: EVT_CDU_L_W, type: "write"}
+    iface: {id: 'b_w', type: BoardInterfaceType.BUTTON, offset: 14} as BoardButton,
+    sim: {id: "cdu_W", hwid: EVT_CDU_L_W, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_X",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "X"},
-    iface: {id: 'b_x', type: BoardInterfaceType.BUTTON, offset: 13},
-    sim: {offset: EVT_CDU_L_X, type: "write"}
+    iface: {id: 'b_x', type: BoardInterfaceType.BUTTON, offset: 13} as BoardButton,
+    sim: {id: "cdu_X", hwid: EVT_CDU_L_X, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_Y",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "Y"},
-    iface: {id: 'b_y', type: BoardInterfaceType.BUTTON, offset: 12},
-    sim: {offset: EVT_CDU_L_Y, type: "write"}
+    iface: {id: 'b_y', type: BoardInterfaceType.BUTTON, offset: 12} as BoardButton,
+    sim: {id: "cdu_Y", hwid: EVT_CDU_L_Y, type: "write"} as WriteDescriptor
   },
   {id: "CDU_Z", front: {style: "square", value: "Z"}},
   {
     id: "CDU_SP",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "SP"},
-    iface: {id: 'b_sp', type: BoardInterfaceType.BUTTON, offset: 4},
-    sim: {offset: EVT_CDU_L_SPACE, type: "write"}
+    iface: {id: 'b_sp', type: BoardInterfaceType.BUTTON, offset: 4} as BoardButton,
+    sim: {id: "cdu_SP", hwid: EVT_CDU_L_SPACE, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_DEL",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "DEL"},
-    iface: {id: 'b_del', type: BoardInterfaceType.BUTTON, offset: 5},
-    sim: {offset: EVT_CDU_L_DEL, type: "write"}
+    iface: {id: 'b_del', type: BoardInterfaceType.BUTTON, offset: 5} as BoardButton,
+    sim: {id: "cdu_DEL", hwid: EVT_CDU_L_DEL, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_/",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "/"},
-    iface: {id: 'b_slash', type: BoardInterfaceType.BUTTON, offset: 6},
-    sim: {offset: EVT_CDU_L_SLASH, type: "write"}
+    iface: {id: 'b_slash', type: BoardInterfaceType.BUTTON, offset: 6} as BoardButton,
+    sim: {id: "cdu_/", hwid: EVT_CDU_L_SLASH, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_CLR",
+    onDeviceReadFnName: "CDU_BUTTON_PRESS",
     front: {style: "square", value: "CLR"},
-    iface: {id: 'b_clr', type: BoardInterfaceType.BUTTON, offset: 7},
-    sim: {offset: EVT_CDU_L_CLR, type: "write"}
+    iface: {id: 'b_clr', type: BoardInterfaceType.BUTTON, offset: 7} as BoardButton,
+    sim: {id: "cdu_CLR", hwid: EVT_CDU_L_CLR, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_SCREEN",
@@ -189,7 +208,7 @@ const layout = [
     front: {},
     iface: {},
     sim: {
-      id: "PMDG_NG3_CDU_0",
+      id: "cdu_SCREEN",
       type: "cdu",
       size: (() => {
         const CDU_COLUMNS = 24;
@@ -203,11 +222,15 @@ const layout = [
   }
 ] as BoardItem[]
 
-function CduScreenReadFn(descriptor: Descriptor, value: any) {
-  console.log(descriptor, value)
+function CduScreenReadFn(descriptor: Descriptor, device: Device, value: any) {
+  console.log("CduScreenReadFn", descriptor, device, value)
 }
 registerCallback<OnSimReadEventCallback>("CDU_SCREEN_READ", CduScreenReadFn);
 
+function CduButtonPressFn(item: BoardInterface, sim: Sim, value: any) {
+  console.log("CduButtonPressFn", item, sim, value);
+}
+registerCallback<OnDeviceReadEventCallback>("CDU_BUTTON_PRESS", CduButtonPressFn);
 
 const screenGrid = reactive(Array.from({length: 14}, () =>
     Array.from({length: 24}, () => ({char: "A", color: "white"}))

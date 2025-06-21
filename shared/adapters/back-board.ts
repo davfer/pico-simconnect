@@ -34,6 +34,7 @@ export class BackBoard {
                 console.info(`Board ${id} opened successfully.`);
             }).catch(err => {
                 console.error(`Failed to open board ${id}:`, err);
+                return {success: false, error: `Failed to open board ${id}: ${err.message}`};
             });
 
             // attach frontend listeners

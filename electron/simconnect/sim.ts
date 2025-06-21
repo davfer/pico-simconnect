@@ -103,6 +103,7 @@ export class Sim {
     }
 
     public register(descriptor: Descriptor) {
+        console.log("registering descriptor:", descriptor);
         if (this.definitions.some(d => d.id === descriptor.id)) {
             throw new Error(`Watcher with ID ${descriptor.id} already registered`);
         }

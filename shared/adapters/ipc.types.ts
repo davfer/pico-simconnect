@@ -1,4 +1,10 @@
-import {BoardItem} from "../board.types";
+import {BoardInterface, BoardItem} from "../board.types";
+import Device from "@electron/usb/device.ts";
+import {Descriptor} from "@shared/sim.types.ts";
+import {Sim} from "@electron/simconnect/sim.ts";
+
+export type OnSimReadEventCallback = (descriptor: Descriptor, device: Device, value: any) => void
+export type OnDeviceReadEventCallback = (item: BoardInterface, sim: Sim, value: any) => void
 
 export interface InitBoardProps {
     id: string,

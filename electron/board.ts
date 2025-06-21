@@ -1,8 +1,8 @@
 import {Sim} from "./simconnect/sim.ts";
-import {BoardInterface, BoardInterfaceType, BoardItem} from "../shared/board.types.ts";
-import Device, {BoardInterfaceChangeCallback} from "./usb/device.ts";
-import {OnSimReadEventCallback} from "@shared/sim.types.ts";
+import {BoardInterface, BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
+import Device from "./usb/device.ts";
 import {getCallback} from "@shared/callback-registry.ts";
+import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapters/ipc.types.ts";
 
 export default class Board {
     private readonly device: Device;
@@ -20,6 +20,8 @@ export default class Board {
                         if (dalCallback) {
                             console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
                             dalCallback(cbDescriptor, this.device, value);
+                        } else {
+                            console.warn(`No DAL callback found for ${item.onSimReadFnName}`);
                         }
                     }
                     if (item.sim?.type == "event" || item.sim?.type == "data") {
@@ -30,17 +32,18 @@ export default class Board {
                         }
                     }
                 }
-
                 this.sim.register(item.sim)
             }
             // Register the item to the hw device if it has an interface
             if (item.iface) {
                 this.device.onChange(item.iface.id, (value) => {
                     if (item.onDeviceReadFnName) {
-                        const dalCallback = getCallback<BoardInterfaceChangeCallback>(item.onDeviceReadFnName)
-                        if (dalCallback) {
+                        const dalCallback = getCallback<OnDeviceReadEventCallback>(item.onDeviceReadFnName)
+                        if (dalCallback && item.iface) {
                             console.info(`Calling DAL callback ${item.onSimReadFnName} with value ${value}`);
-                            dalCallback(value);
+                            dalCallback(item.iface, this.sim, value);
+                        } else {
+                            console.warn(`No DAL callback found for ${item.onDeviceReadFnName}`);
                         }
                     }
                     if (item.iface?.type == BoardInterfaceType.BUTTON) {
@@ -50,12 +53,6 @@ export default class Board {
                             eventCallback(item.id, value.value);
                         }
                     }
-
-                    // TODO: Remove
-                    // if (value.value === 1) {
-                    //     console.info(`triggering ${item.id} with value ${value.value} to sim`);
-                    //     this.sim.trigger(item.id, value.value);
-                    // }
                 })
             }
         }
