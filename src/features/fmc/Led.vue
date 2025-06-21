@@ -2,7 +2,8 @@
 const props = defineProps<{
   value?: boolean;
   color?: "red" | "green" | "blue" | "yellow" | "white";
-  type?: "square" | "circle" | "vrectangle";
+  type?: "square" | "circle" | "vrectangle" | "rectangle-sm";
+  text?: string;
 }>();
 </script>
 
@@ -21,6 +22,12 @@ const props = defineProps<{
 
 .led.square {
   border-radius: 0;
+}
+
+.led.rectangle-sm {
+  border-radius: 0;
+  width: 32px;
+  height: 16px;
 }
 
 .led.vrectangle {

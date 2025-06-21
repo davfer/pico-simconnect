@@ -161,7 +161,7 @@ export default class Device {
         }
     }
 
-    private async sendCmd(cmd: number, data: number[]) {
+    public async sendCmd(cmd: number, data: number[]) {
         if (!this.device) {
             throw new Error('Device not opened');
         }

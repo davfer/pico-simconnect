@@ -3,8 +3,8 @@ import Screen from "./Screen.vue";
 import Button from "./Button.vue";
 import Led from "./Led.vue";
 import {Pixel} from "./fmc.types.ts";
-import {onMounted, onUnmounted, reactive, ref} from "vue";
-import {BoardButton, BoardInterface, BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
+import {onUnmounted, reactive, ref} from "vue";
+import {BoardButton, BoardInterfaceType, BoardItem, BoardLed} from "@shared/board.types.ts";
 import {
   EVT_CDU_L_CLR,
   EVT_CDU_L_DEL,
@@ -25,16 +25,25 @@ import {
 } from "@shared/definitions/PMDG_NGX_SDK.ts";
 import FrontBoard from "@shared/adapters/front-board.ts";
 import CommandBar from "@src/components/CommandBar.vue";
-import {CduDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
-import {PMDG_NG3_CDU_0_DEFINITION, PMDG_NG3_CDU_0_ID, PMDG_NG3_CDU_0_NAME} from "@shared/definitions/PMDG_NG3_SDK.ts";
-import {registerCallback} from "@shared/callback-registry.ts";
-import Device from "@electron/usb/device.ts";
-import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapters/ipc.types.ts";
-import {Sim} from "@electron/simconnect/sim.ts";
+import {DataDescriptor, ReadDescriptor, WriteDescriptor} from "@shared/sim.types.ts";
+import {
+  PMDG_NG3_CDU_0_DEFINITION,
+  PMDG_NG3_CDU_0_ID,
+  PMDG_NG3_CDU_0_NAME,
+  PMDG_NG3_Data,
+  PMDG_NG3_DATA_DEFINITION,
+  PMDG_NG3_DATA_ID,
+  PMDG_NG3_DATA_NAME
+} from "@shared/definitions/PMDG_NG3_SDK.ts";
 
 const props = defineProps<{
   board: FrontBoard
 }>();
+
+const enum simids {
+  CDU_SCREEN,
+  PMDG_DATA,
+}
 
 const layout = [
   {id: "CDU_L1", front: {style: "rectangle-sm", value: "-"}},
@@ -89,28 +98,24 @@ const layout = [
   {id: "CDU_K", front: {style: "square", value: "K"}},
   {
     id: "CDU_L",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "L"},
     iface: {id: 'b_l', type: BoardInterfaceType.BUTTON, offset: 3} as BoardButton,
     sim: {id: "cdu_L", simid: 1, hwid: EVT_CDU_L_L, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_M",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "M"},
     iface: {id: 'b_m', type: BoardInterfaceType.BUTTON, offset: 2} as BoardButton,
     sim: {id: "cdu_M", hwid: EVT_CDU_L_M, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_N",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "N"},
     iface: {id: 'b_n', type: BoardInterfaceType.BUTTON, offset: 1} as BoardButton,
     sim: {id: "cdu_N", hwid: EVT_CDU_L_N, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_O",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "O"},
     iface: {id: 'b_o', type: BoardInterfaceType.BUTTON, offset: 0} as BoardButton,
     sim: {id: "cdu_O", hwid: EVT_CDU_L_O, type: "write"} as WriteDescriptor
@@ -118,28 +123,24 @@ const layout = [
   {id: "CDU_P", front: {style: "square", value: "P"}},
   {
     id: "CDU_Q",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "Q"},
     iface: {id: 'b_q', type: BoardInterfaceType.BUTTON, offset: 11} as BoardButton,
     sim: {id: "cdu_Q", hwid: EVT_CDU_L_Q, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_R",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "R"},
     iface: {id: 'b_r', type: BoardInterfaceType.BUTTON, offset: 10} as BoardButton,
     sim: {id: "cdu_R", hwid: EVT_CDU_L_R, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_S",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "S"},
     iface: {id: 'b_s', type: BoardInterfaceType.BUTTON, offset: 9} as BoardButton,
     sim: {id: "cdu_S", hwid: EVT_CDU_L_S, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_T",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "T"},
     iface: {id: 'b_t', type: BoardInterfaceType.BUTTON, offset: 8} as BoardButton,
     sim: {id: "cdu_T", hwid: EVT_CDU_L_T, type: "write"} as WriteDescriptor
@@ -147,28 +148,24 @@ const layout = [
   {id: "CDU_U", front: {style: "square", value: "U"}},
   {
     id: "CDU_V",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "V"},
     iface: {id: 'b_v', type: BoardInterfaceType.BUTTON, offset: 15} as BoardButton,
     sim: {id: "cdu_V", hwid: EVT_CDU_L_V, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_W",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "W"},
     iface: {id: 'b_w', type: BoardInterfaceType.BUTTON, offset: 14} as BoardButton,
     sim: {id: "cdu_W", hwid: EVT_CDU_L_W, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_X",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "X"},
     iface: {id: 'b_x', type: BoardInterfaceType.BUTTON, offset: 13} as BoardButton,
     sim: {id: "cdu_X", hwid: EVT_CDU_L_X, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_Y",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "Y"},
     iface: {id: 'b_y', type: BoardInterfaceType.BUTTON, offset: 12} as BoardButton,
     sim: {id: "cdu_Y", hwid: EVT_CDU_L_Y, type: "write"} as WriteDescriptor
@@ -176,40 +173,65 @@ const layout = [
   {id: "CDU_Z", front: {style: "square", value: "Z"}},
   {
     id: "CDU_SP",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "SP"},
     iface: {id: 'b_sp', type: BoardInterfaceType.BUTTON, offset: 4} as BoardButton,
     sim: {id: "cdu_SP", hwid: EVT_CDU_L_SPACE, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_DEL",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "DEL"},
     iface: {id: 'b_del', type: BoardInterfaceType.BUTTON, offset: 5} as BoardButton,
     sim: {id: "cdu_DEL", hwid: EVT_CDU_L_DEL, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_/",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "/"},
     iface: {id: 'b_slash', type: BoardInterfaceType.BUTTON, offset: 6} as BoardButton,
     sim: {id: "cdu_/", hwid: EVT_CDU_L_SLASH, type: "write"} as WriteDescriptor
   },
   {
     id: "CDU_CLR",
-    onDeviceReadFnName: "CduButtonPressFn",
     front: {style: "square", value: "CLR"},
     iface: {id: 'b_clr', type: BoardInterfaceType.BUTTON, offset: 7} as BoardButton,
     sim: {id: "cdu_CLR", hwid: EVT_CDU_L_CLR, type: "write"} as WriteDescriptor
   },
   {
+    id: "CDU_EXEC_LIGHT",
+    front: {style: "square"},
+    iface: {id: 'l_exec', type: BoardInterfaceType.LED} as BoardLed,
+    sim: {id: "cdu_EXEC_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunEXEC"} as ReadDescriptor
+  },
+  {
+    id: "CDU_CALL_LIGHT",
+    front: {style: "rectangle"},
+    iface: {id: 'l_call', type: BoardInterfaceType.LED} as BoardLed,
+    sim: {id: "cdu_CALL_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunCALL"} as ReadDescriptor
+  },
+  {
+    id: "CDU_FAIL_LIGHT",
+    front: {style: "rectangle"},
+    iface: {id: 'l_fail', type: BoardInterfaceType.LED} as BoardLed,
+    sim: {id: "cdu_FAIL_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunFAIL"} as ReadDescriptor
+  },
+  {
+    id: "CDU_MSG_LIGHT",
+    front: {style: "rectangle"},
+    iface: {id: 'l_msg', type: BoardInterfaceType.LED} as BoardLed,
+    sim: {id: "cdu_MSG_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunMSG"} as ReadDescriptor
+  },
+  {
+    id: "CDU_OFST_LIGHT",
+    front: {style: "rectangle"},
+    iface: {id: 'l_ofst', type: BoardInterfaceType.LED} as BoardLed,
+    sim: {id: "cdu_OFST_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunOFST"} as ReadDescriptor
+  },
+  {
     id: "CDU_SCREEN",
     onSimReadFnName: "CduScreenReadFn",
-    front: {},
-    iface: {},
     sim: {
       id: "cdu_SCREEN",
-      type: "cdu",
+      simid: simids.CDU_SCREEN,
+      type: "data",
       size: (() => {
         const CDU_COLUMNS = 24;
         const CDU_ROWS = 14;
@@ -218,7 +240,20 @@ const layout = [
       dataName: PMDG_NG3_CDU_0_NAME,
       dataId: PMDG_NG3_CDU_0_ID,
       dataDefinition: PMDG_NG3_CDU_0_DEFINITION,
-    } as CduDescriptor
+    } as DataDescriptor
+  },
+  {
+    id: 'PMDG_NG3_Data',
+    onSimReadFnName: "PmdgNg3DataReadFn",
+    sim: {
+      id: 'PMDG_NG3_Data',
+      simid: simids.PMDG_DATA,
+      type: "data",
+      size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 0), 0),
+      dataName: PMDG_NG3_DATA_NAME,
+      dataId: PMDG_NG3_DATA_ID,
+      dataDefinition: PMDG_NG3_DATA_DEFINITION,
+    } as DataDescriptor
   }
 ] as BoardItem[]
 
@@ -245,6 +280,10 @@ const register = () => {
   }
 
   layout.forEach((item) => {
+    if (["PMDG_NG3_Data", "CDU_SCREEN"].indexOf(item.id) >= 0) {
+      console.log(`Skipping item ${item.id} as it is not a button or LED`);
+      return;
+    }
     items.set(item.id, 0)
     props.board.onChange(item.id, (_: string, value: number) => {
       items.set(item.id, value)
@@ -278,7 +317,8 @@ const status = ref("Standby -- press Connect");
   <div class="bg-gray-700 text-white p-4 rounded-lg shadow-lg">
     <div class="grid grid-cols-[64px_auto_64px] gap-0 grid-rows-1">
       <div class="mt-6">
-        <Button v-for="i in layout.slice(0,6)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)" class="mb-3"
+        <Button v-for="i in layout.slice(0,6)" :key="i.id" :clicked="items.get(i.id) === 1"
+                :registered="items.has(i.id)" class="mb-3"
                 type="rectangle-sm" value="-"
                 @click="handleClick(i)"/>
       </div>
@@ -286,50 +326,57 @@ const status = ref("Standby -- press Connect");
         <Screen :grid="screenGrid"/>
       </div>
       <div class="text-right mt-6">
-        <Button v-for="i in layout.slice(6,12)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)" class="mb-3"
+        <Button v-for="i in layout.slice(6,12)" :key="i.id" :clicked="items.get(i.id) === 1"
+                :registered="items.has(i.id)" class="mb-3"
                 type="rectangle-sm" value="-"
                 @click="handleClick(i)"/>
       </div>
     </div>
     <div class="mt-4 grid grid-cols-[32px_auto_32px] gap-6">
       <div class="flex flex-col justify-center">
-        <Led type="vrectangle"/>
-        <Led type="vrectangle"/>
+        <Led type="vrectangle" color="white" text="CALL" :value="items.get(layout[70].id) === 1" />
+        <Led type="vrectangle" color="red" text="FAIL" :value="items.get(layout[71].id) === 1"/>
       </div>
       <div class="grid grid-cols-8 gap-6">
         <div class="col-span-full grid grid-cols-6 gap-5">
-          <Button v-for="i in layout.slice(12, 17)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)"
+          <Button v-for="i in layout.slice(12, 17)" :key="i.id" :clicked="items.get(i.id) === 1"
+                  :registered="items.has(i.id)"
                   :type="i.front?.style" :value="i.front?.value"
                   @click="handleClick(i)"/>
+          <Led :color="'green'" :type="'rectangle-sm'" :value="items.get(layout[69].id) === 1" />
         </div>
         <div class="col-span-full grid grid-cols-6 gap-5">
-          <Button v-for="i in layout.slice(17, 23)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)"
+          <Button v-for="i in layout.slice(17, 23)" :key="i.id" :clicked="items.get(i.id) === 1"
+                  :registered="items.has(i.id)"
                   :type="i.front?.style" :value="i.front?.value"
                   @click="handleClick(i)"/>
         </div>
         <div class="col-span-3">
           <div class="grid grid-cols-2 gap-5">
-            <Button v-for="i in layout.slice(23, 27)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)"
+            <Button v-for="i in layout.slice(23, 27)" :key="i.id" :clicked="items.get(i.id) === 1"
+                    :registered="items.has(i.id)"
                     :type="i.front?.style" :value="i.front?.value"
                     @click="handleClick(i)"/>
           </div>
           <div class="grid grid-cols-3 gap-2 mt-4">
-            <Button v-for="i in layout.slice(27, 39)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)"
+            <Button v-for="i in layout.slice(27, 39)" :key="i.id" :clicked="items.get(i.id) === 1"
+                    :registered="items.has(i.id)"
                     :type="i.front?.style" :value="i.front?.value"
                     @click="handleClick(i)"/>
           </div>
         </div>
         <div class="col-span-5">
           <div class="grid grid-cols-5 gap-3 mt-2">
-            <Button v-for="i in layout.slice(39, 69)" :key="i.id" :clicked="items.get(i.id) === 1" :registered="items.has(i.id)"
+            <Button v-for="i in layout.slice(39, 69)" :key="i.id" :clicked="items.get(i.id) === 1"
+                    :registered="items.has(i.id)"
                     :type="i.front?.style" :value="i.front?.value"
                     @click="handleClick(i)"/>
           </div>
         </div>
       </div>
       <div class="flex flex-col justify-center">
-        <Led type="vrectangle"/>
-        <Led type="vrectangle"/>
+        <Led type="vrectangle" color="yellow" text="MSG" :value="items.get(layout[72].id) === 1" />
+        <Led type="vrectangle" color="yellow" text="OFST" :value="items.get(layout[73].id) === 1"/>
       </div>
     </div>
   </div>

@@ -6,6 +6,8 @@
 //------------------------------------------------------------------------------
 
 // SimConnect data area definitions
+import {DataDefinition, DataDefinitionType} from "@shared/sim.types.ts";
+
 export const PMDG_NG3_DATA_NAME = "PMDG_NG3_Data"
 export const PMDG_NG3_DATA_ID = 0x4E473331
 export const PMDG_NG3_DATA_DEFINITION = 0x4E473332
@@ -36,6 +38,351 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 
 
 // NG3 data structure
+export function PosParser(data: Buffer): number {
+    return data.readUInt8(0)
+}
+
+export function BoolParser(data: Buffer): boolean {
+    return data.readUInt8(0) !== 0
+}
+
+export enum IRSMode {
+    OFF = 'OFF',
+    ALIGN = 'ALIGN',
+    NAV = 'NAV',
+    ATT = 'ATT',
+}
+
+export function IRSModeParser(data: Buffer): IRSMode {
+    switch (data.readUInt8(0)) {
+        case 0:
+            return IRSMode.OFF;
+        case 1:
+            return IRSMode.ALIGN;
+        case 2:
+            return IRSMode.NAV;
+        case 3:
+            return IRSMode.ATT;
+        default:
+            throw new Error(`Unknown IRS mode: ${data.readUInt8(0)}`);
+    }
+}
+
+export const PMDG_NG3_Data: DataDefinition[] = [
+    // Aft overhead
+    {name: "IRS_DisplaySelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position", parser: PosParser},
+    {name: "IRS_SysDisplay_R", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "IRS_annunGPS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "IRS_annunALIGN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "IRS_annunON_DC", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "IRS_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "IRS_annunDC_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "IRS_ModeSelector", dataType: DataDefinitionType.CHAR, size: 2, unit: "position", parser: IRSModeParser},
+    {name: "WARN_annunPSEU", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "COMM_ServiceInterphoneSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_DomeWhiteSw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "ENG_EECSwitch", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ENG_annunREVERSER", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ENG_annunENGINE_CONTROL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ENG_annunALTN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "OXY_Needle", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "OXY_SwNormal", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "OXY_annunPASS_OXY_ON", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GEAR_annunOvhdLEFT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GEAR_annunOvhdNOSE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GEAR_annunOvhdRIGHT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FLTREC_SwNormal", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FLTREC_annunOFF", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Forward overhead
+    {name: "FCTL_FltControl_Sw", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"},
+    {name: "FCTL_Spoiler_Sw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FCTL_YawDamper_Sw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_AltnFlaps_Sw_ARM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_AltnFlaps_Control_Sw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "FCTL_annunFC_LOW_PRESSURE", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FCTL_annunYAW_DAMPER", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunLOW_QUANTITY", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunLOW_PRESSURE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunLOW_STBY_RUD_ON", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunFEEL_DIFF_PRESS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunSPEED_TRIM_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunMACH_TRIM_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FCTL_annunAUTO_SLAT_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "NAVDIS_VHFNavSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "NAVDIS_IRSSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "NAVDIS_FMCSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "NAVDIS_SourceSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    {name: "NAVDIS_ControlPaneSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
+    // Fuel
+    {name: "FUEL_FuelTempNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Celsius"},
+    {name: "FUEL_CrossFeedSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FUEL_PumpFwdSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_PumpAftSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_PumpCtrSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_AuxFwd", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // aux fwd A and aux fwd B
+    {name: "FUEL_AuxAft", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // aux aft A and aux aft B
+    {name: "FUEL_FWDBleed", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FUEL_AFTBleed", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FUEL_GNDXfr", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FUEL_annunENG_VALVE_CLOSED", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: Closed  1: Open  2: In transit (bright)
+    {name: "FUEL_annunSPAR_VALVE_CLOSED", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: Closed  1: Open  2: In transit (bright)
+    {name: "FUEL_annunFILTER_BYPASS", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_annunXFEED_VALVE_OPEN", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: Closed  1: Open  2: In transit (dim)
+    {name: "FUEL_annunLOWPRESS_Fwd", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_annunLOWPRESS_Aft", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FUEL_annunLOWPRESS_Ctr", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    // Electrical
+    {name: "ELEC_annunBAT_DISCHARGE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_annunTR_UNIT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_annunELEC", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_DCMeterSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: STBY PWR  1: BAT BUS ... 7: TEST
+    {name: "ELEC_ACMeterSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: STBY PWR  1: GND PWR ... 6: TEST
+    {name: "ELEC_BatSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: OFF  1: BAT  2: ON
+    {name: "ELEC_CabUtilSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_IFEPassSeatSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_annunDRIVE", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_annunSTANDBY_POWER_OFF", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_IDGDisconnectSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_StandbyPowerSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: BAT  1: OFF  2: AUTO
+    {name: "ELEC_annunGRD_POWER_AVAILABLE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_GrdPwrSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_BusTransSw_AUTO", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ELEC_GenSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_APUGenSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_annunTRANSFER_BUS_OFF", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_annunSOURCE_OFF", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_annunGEN_BUS_OFF", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ELEC_annunAPU_GEN_OFF_BUS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // APU
+    {name: "APU_EGTNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Celsius"},
+    {name: "APU_annunMAINT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "APU_annunLOW_OIL_PRESSURE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "APU_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "APU_annunOVERSPEED", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Wipers
+    {name: "OH_WiperLSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: PARK  1: INT  2: LOW  3:HIGH
+    {name: "OH_WiperRSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: PARK  1: INT  2: LOW  3:HIGH
+    // Center overhead controls & indicators
+    {name: "LTS_CircuitBreakerKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "LTS_OvereadPanelKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "AIR_EquipCoolingSupplyNORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_EquipCoolingExhaustNORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_annunEquipCoolingSupplyOFF", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_annunEquipCoolingExhaustOFF", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_annunEmerNOT_ARMED", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_EmerExitSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: OFF  1: ARMED  2: ON
+    {name: "COMM_NoSmokingSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: OFF  1: AUTO   2: ON
+    {name: "COMM_FastenBeltsSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: OFF  1: AUTO   2: ON
+    {name: "COMM_annunCALL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "COMM_annunPA_IN_USE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Anti-ice
+    {name: "ICE_annunOVERHEAT", dataType: DataDefinitionType.BOOLEAN, size: 4, unit: "bool"},
+    {name: "ICE_annunON", dataType: DataDefinitionType.BOOLEAN, size: 4, unit: "bool"},
+    {name: "ICE_WindowHeatSw", dataType: DataDefinitionType.BOOLEAN, size: 4, unit: "bool"}, // 0: OFF  1: ON
+    {name: "ICE_annunCAPT_PITOT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunL_ELEV_PITOT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunL_ALPHA_VANE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunL_TEMP_PROBE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunFO_PITOT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunR_ELEV_PITOT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunR_ALPHA_VANE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_annunAUX_PITOT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_ProbeHeatSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ICE_annunVALVE_OPEN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 0: OFF  1: ON
+    {name: "ICE_annunCOWL_ANTI_ICE", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "ICE_annunCOWL_VALVE_OPEN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 0: OFF  1: ON
+    {name: "ICE_WingAntiIceSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "ICE_EngAntiIceSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 0: OFF  1: ON
+    // Hydraulics
+    {name: "HYD_annunLOW_PRESS_eng", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "HYD_annunLOW_PRESS_elec", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "HYD_annunOVERHEAT_elec", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "HYD_PumpSw_eng", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "HYD_PumpSw_elec", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    // Air systems
+    {name: "AIR_TempSourceSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Positions 0..6
+    {name: "AIR_TrimAirSwitch", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_annunZoneTemp", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"}, // 3 zones
+    {name: "AIR_annunDualBleed", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_annunRamDoorL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_annunRamDoorR", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_RecircFanSwitch", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 recirc fans
+    {name: "AIR_PackSwitch", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0=OFF  1=AUTO  2=HIGH
+    {name: "AIR_BleedAirSwitch", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 bleed air switches
+    {name: "AIR_APUBleedAirSwitch", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "AIR_IsolationValveSwitch", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0=CLOSE  1=AUTO  2=OPEN
+    {name: "AIR_annunPackTripOff", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 packs
+    {name: "AIR_annunWingBodyOverheat", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 zones
+    {name: "AIR_annunBleedTripOff", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 bleed air switches
+    {name: "AIR_FltAltWindow", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"}, // WARNING obsolete - use AIR_DisplayFltAlt instead
+    {name: "AIR_LandAltWindow", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"}, // WARNING obsolete - use AIR_DisplayLandAlt instead
+    {name: "AIR_OutflowValveSwitch", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=CLOSE  1=NEUTRAL  2=OPEN
+    {name: "AIR_PressurizationModeSelector", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=A
+    // Bottom overhead
+    {name: "LTS_LandingLtRetractableSw", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: RETRACT  1: EXTEND  2: ON
+    {name: "LTS_LandingLtFixedSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "LTS_RunwayTurnoffSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "LTS_TaxiSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "APU_Selector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: OFF  1: ON  2: START
+    {name: "ENG_StartSelector", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: GRD  1: OFF  2: CONT  3: FLT
+    {name: "ENG_IgnitionSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: IGN L  1: BOTH  2: IGN R
+    {name: "LTS_LogoSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_PositionSw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: STEADY  1: OFF  2: STROBE&STEADY
+    {name: "LTS_AntiCollisionSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_WingSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_WheelWellSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Glareshield
+    {name: "WARN_annunFIRE_WARN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "WARN_annunMASTER_CAUTION", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "WARN_annunFLT_CONT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunIRS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunFUEL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunELEC", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunAPU", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunOVHT_DET", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunANTI_ICE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunHYD", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunDOORS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunENG", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunOVERHEAD", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "WARN_annunAIR_COND", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // EFIS control panels
+    {name: "EFIS_MinsSelBARO", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "EFIS_BaroSelHPA", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "EFIS_VORADFSel1", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: VOR  1: OFF  2: ADF
+    {name: "EFIS_VORADFSel2", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: VOR  1: OFF  2: ADF
+    {name: "EFIS_ModeSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: APP  1: VOR  2: MAP  3: PLAn
+    {name: "EFIS_RangeSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: 5 ... 7: 640
+    // Mode control panel
+    {name: "MCP_Course", dataType: DataDefinitionType.UINT, size: 2, unit: "degrees"},
+    {name: "MCP_IASMach", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Mach"}, // Mach if < 10.0
+    {name: "MCP_IASBlank", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_IASOverspeedFlash", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_IASUnderspeedFlash", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_Heading", dataType: DataDefinitionType.UINT, size: 1, unit: "degrees"},
+    {name: "MCP_Altitude", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"},
+    {name: "MCP_VertSpeed", dataType: DataDefinitionType.SHORT, size: 1, unit: "feet/min"},
+    {name: "MCP_VertSpeedBlank", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_FDSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "MCP_ATArmSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_BankLimitSel", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: 10 ... 4: 30
+    {name: "MCP_DisengageBar", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunFD", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "MCP_annunATArm", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunN1", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunSPEED", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunVNAV", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunLVL_CHG", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunHDG_SEL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunLNAV", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunVOR_LOC", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunAPP", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunALT_HOLD", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunVS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunCMD_A", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunCWS_A", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunCMD_B", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MCP_annunCWS_B", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Forward panel
+    {name: "MAIN_NoseWheelSteeringSwNORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"}, // false: ALT
+    {name: "MAIN_annunBELOW_GS", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "MAIN_MainPanelDUSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: OUTBD PFD ... 4 MFD for Capt; reverse sequence for FO
+    {name: "MAIN_LowerDUSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: ENG PRI ... 2 ND for Capt; reverse sequence for FO
+    {name: "MAIN_annunAP", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // Red color. See MAIN_annunAP_Amber for amber color (added to the bottom of the struct)
+    {name: "MAIN_annunAT", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // Red color. See MAIN_annunAT_Amber for amber color (added to the bottom of the struct)
+    {name: "MAIN_annunFMC", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "MAIN_DisengageTestSelector", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: 1  1: OFF}
+    {name: "MAIN_annunSPEEDBRAKE_ARMED", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"}, // false: ALT
+    {name: "MAIN_annunSPEEDBRAKE_DO_NOT_ARM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_annunSPEEDBRAKE_EXTENDED", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_annunSTAB_OUT_OF_TRIM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_LightsSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: TEST  1: BRT  2: DIM
+    {name: "MAIN_RMISelector1_VOR", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_RMISelector2_VOR", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_N1SetSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: 2  1: 1  2: AUTO  3: BOTH
+    {name: "MAIN_SpdRefSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: SET  1: AUTO  2: V1  3: VR  4: WT  5: VREF  6: Bug
+    {name: "MAIN_FuelFlowSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: RESET  1: RATE  2: USED
+    {name: "MAIN_AutobrakeSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: RTO  1: OFF ... 5: MAX
+    {name: "MAIN_annunANTI_SKID_INOP", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_annunAUTO_BRAKE_DISARM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_annunLE_FLAPS_TRANSIT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_annunLE_FLAPS_EXT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "MAIN_TEFlapsNeedle", dataType: DataDefinitionType.FLOAT, size: 2, unit: "Value"}, // Value
+    {name: "MAIN_annunGEAR_transit", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"},
+    {name: "MAIN_annunGEAR_locked", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"},
+    {name: "MAIN_GearLever", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: UP  1: OFF  2: DOWN
+    {name: "MAIN_BrakePressNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Value"}, // Value
+    {name: "HGS_annun_AIII", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_NO_AIII", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_FLARE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_RO", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_RO_CTN", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_RO_ARM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_TO", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_TO_CTN", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_APCH", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_TO_WARN", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_Bar", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annun_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Lower forward panel
+    {name: "LTS_MainPanelKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // Position 0...150
+    {name: "LTS_BackgroundKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "LTS_AFDSFloodKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "LTS_OutbdDUBrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // Position 0...127
+    {name: "LTS_InbdDUBrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // Position 0...127
+    {name: "LTS_InbdDUMapBrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // Position 0...127
+    {name: "LTS_UpperDUBrtKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...127
+    {name: "LTS_LowerDUBrtKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...127
+    {name: "LTS_LowerDUMapBrtKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...127
+    {name: "GPWS_annunINOP", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GPWS_FlapInhibitSw_NORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GPWS_GearInhibitSw_NORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "GPWS_TerrInhibitSw_NORM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    // Control Stand
+    {name: "CDU_annunEXEC", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CDU_annunCALL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CDU_annunFAIL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CDU_annunMSG", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CDU_annunOFST", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CDU_BrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position", parser: PosParser}, // Position 0...127
+    {name: "TRIM_StabTrimMainElecSw_NORMAL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "TRIM_StabTrimAutoPilotSw_NORMAL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "PED_annunParkingBrake", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FIRE_OvhtDetSw", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: A  1: NORMAL  2: B
+    {name: "FIRE_annunENG_OVERHEAT", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "FIRE_DetTestSw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: FAULT/INOP  1: neutral  2: OVHT/FIRE
+    {name: "FIRE_HandlePos", dataType: DataDefinitionType.CHAR, size: 3, unit: "position"}, // 0: In  1: Blocked  2: Out  3: Turned Left  4: Turned right
+    {name: "FIRE_HandleIlluminated", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"},
+    {name: "FIRE_annunWHEEL_WELL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FIRE_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FIRE_annunAPU_DET_INOP", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FIRE_annunAPU_BOTTLE_DISCHARGE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "FIRE_annunBOTTLE_DISCHARGE", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // Left, Right
+    {name: "FIRE_ExtinguisherTestSw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: 1  1: neutral  2: 2
+    {name: "FIRE_annunExtinguisherTest", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"}, // Left, Right, APU
+    {name: "CARGO_annunExtTest", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // Fwd, Aft
+    {name: "CARGO_DetSelect", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: A  1: ORM  2: B
+    {name: "CARGO_ArmedSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
+    {name: "CARGO_annunFWD", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "CARGO_annunAFT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "CARGO_annunDETECTOR_FAULT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "CARGO_annunDISCH", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annunRWY", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annunGS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "HGS_annunCLR", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "XPDR_XpndrSelector_2", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"}, // false: 1  true: 2
+    {name: "XPDR_AltSourceSel_2", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"}, // false: 1  true: 2
+    {name: "XPDR_ModeSel", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: STBY  1: ALT RPTG OFF ... 4: TA/RA
+    {name: "XPDR_annunFAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "LTS_PedFloodKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "LTS_PedPanelKnob", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // Position 0...150
+    {name: "TRIM_StabTrimSw_NORMAL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "PED_annunLOCK_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "PED_annunAUTO_UNLK", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
+    {name: "PED_FltDkDoorSel", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"} // 0: UNLKD  1 AUTO pushed in  2: AUTO  3: DENY
+]
+
 // struct PMDG_NG3_Data
 // {
 // 	////////////////////////////////////////////
@@ -203,7 +550,6 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 // 	bool			HYD_annunOVERHEAT_elec[2];
 // 	bool			HYD_PumpSw_eng[2];
 // 	bool			HYD_PumpSw_elec[2];
-//
 // 	// Air systems
 // 	unsigned char	AIR_TempSourceSelector;				// Positions 0..6
 // 	bool			AIR_TrimAirSwitch;
@@ -224,7 +570,6 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 // 	unsigned int	AIR_LandAltWindow;					// WARNING obsolete - use AIR_DisplayLandAlt instead
 // 	unsigned int	AIR_OutflowValveSwitch;				// 0=CLOSE  1=NEUTRAL  2=OPEN
 // 	unsigned int	AIR_PressurizationModeSelector;		// 0=AUTO  1=ALTN  2=MAN
-//
 // 	// Bottom overhead
 // 	unsigned char	LTS_LandingLtRetractableSw[2];		// 0: RETRACT  1: EXTEND  2: ON
 // 	bool			LTS_LandingLtFixedSw[2];
@@ -299,7 +644,6 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 // 	bool			MCP_annunCWS_A;
 // 	bool			MCP_annunCMD_B;
 // 	bool			MCP_annunCWS_B;
-//
 // 	// Forward panel
 // 	//------------------------------------------
 // 	bool			MAIN_NoseWheelSteeringSwNORM;		// false: ALT
@@ -371,7 +715,6 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 // 	bool			CDU_annunMSG[2];
 // 	bool			CDU_annunOFST[2];
 // 	unsigned char	CDU_BrtKnob[2];						// Position 0...127
-//
 // 	bool			TRIM_StabTrimMainElecSw_NORMAL;
 // 	bool			TRIM_StabTrimAutoPilotSw_NORMAL;
 // 	bool			PED_annunParkingBrake;
@@ -540,8 +883,8 @@ export const PMDG_NG3_CDU_1_DEFINITION = 0x4E473339
 //
 // // NG3 CDU Screen Data Structure
 //
-// export const CDU_COLUMNS =	24
-// export const CDU_ROWS =	14
+export const CDU_COLUMNS = 24
+export const CDU_ROWS = 14
 //
 // struct PMDG_NG3_CDU_Screen
 // {

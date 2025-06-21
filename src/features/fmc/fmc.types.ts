@@ -1,4 +1,3 @@
-import {RawBuffer} from "node-simconnect";
 
 export interface Pixel {
     char: string
@@ -8,6 +7,10 @@ export interface Pixel {
 export interface CduData {
     lines: string[]
     powered: boolean
+}
+
+export interface RawBuffer {
+    readBytes: (length: number) => Buffer
 }
 
 export function extractCduScreenState(rawBuffer: RawBuffer): CduData {
@@ -32,8 +35,4 @@ export function extractCduScreenState(rawBuffer: RawBuffer): CduData {
         lines: screenText,
         powered: cduIsPowered
     };
-}
-
-export const nativeCallbacks: Record<string, (data: any) => void> = {
-
 }

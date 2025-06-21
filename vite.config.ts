@@ -25,6 +25,7 @@ export default defineConfig({
               '@shared': path.resolve(__dirname, 'shared'),
               '@electron': path.resolve(__dirname, 'electron'),
               '@callbacks': path.resolve(__dirname, 'callbacks'),
+              '@src': path.resolve(__dirname, 'src'),
             },
           },
           build: {
