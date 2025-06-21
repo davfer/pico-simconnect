@@ -9,71 +9,98 @@ export class BackBoard {
     private sim: Sim = new Sim();
 
     constructor(private ipc: Electron.IpcMain, private mainWindow: BrowserWindow) {
-        console.log("Starting back board...");
+        console.info("BackBoard: Initializing...");
 
         this.ipc.handle('init-sim', async () => {
-            console.info("Initializing SimConnect...");
-            return this.sim.connect().then(() => {
-                console.info("SimConnect initialized successfully.");
+            console.info("BackBoard: Initializing SimConnect...");
+            try {
+                await this.sim.connect();
+                console.info("BackBoard: SimConnect initialized successfully.");
                 return {success: true};
-            }).catch(err => {
-                console.error("Failed to initialize SimConnect:", err);
+            } catch (err) {
+                console.error("BackBoard: Failed to initialize SimConnect:", err);
                 return {success: false, error: err.message};
-            });
+            }
         });
 
         this.ipc.handle('init-board', (_: IpcMainInvokeEvent, args: InitBoardProps) => {
-            const {id, vendorId, productId, items} = args
+            const {id, vendorId, productId, items} = args;
             if (this.boards.has(id)) {
-                console.warn(`Board with id ${id} already exists.`);
-                return {success: false, error: `Board with id ${id} already exists.`};
+                console.warn(`BackBoard: Board with id '${id}' already initialized.`);
+                return {success: false, error: `Board with id '${id}' already initialized.`};
             }
-            console.info('Starting board with id:', id, 'vid:', vendorId, 'pid:', productId, 'items:', items.length);
+            console.info(`BackBoard: Initializing board '${id}' (VID: ${vendorId}, PID: ${productId}, Items: ${items.length})`);
             const board = new Board(this.sim, vendorId, productId, items || []);
-            board.open().then(() => {
-                console.info(`Board ${id} opened successfully.`);
-            }).catch(err => {
-                console.error(`Failed to open board ${id}:`, err);
-                return {success: false, error: `Failed to open board ${id}: ${err.message}`};
-            });
+            try {
+                await board.open();
+                console.info(`BackBoard: Board '${id}' opened successfully.`);
+            } catch (err) {
+                console.error(`BackBoard: Failed to open board '${id}':`, err);
+                return {success: false, error: `Failed to open board '${id}': ${err.message}`};
+            }
 
             // attach frontend listeners
             for (const item of items) {
-                board.onChange(item.id, (id, value) => {
-                    console.info(`Board ${id} triggered item ${item.id} with value ${value}`);
-                    this.mainWindow.webContents.send('board-changed', id, item.id, value);
+                board.onChange(item.id, (boardId, value) => { // boardId here is actually the board's main id from the constructor
+                    console.info(`BackBoard: Board '${boardId}' triggered item '${item.id}' with value '${value}'`);
+                    this.mainWindow.webContents.send('board-changed', boardId, item.id, value);
                 })
             }
 
             this.boards.set(id, board);
+            console.info(`BackBoard: Board '${id}' initialized and listening for changes.`);
+            return {success: true};
+        });
 
-            return {success: true}
-        })
-        ipc.on('trigger-board', (_: IpcMainInvokeEvent, args: TriggerBoardProps) => {
+        this.ipc.on('trigger-board', (_event: Electron.IpcMainEvent, args: TriggerBoardProps) => {
             const {id, itemId, value} = args;
             const board = this.boards.get(id);
             if (!board) {
-                console.warn(`Board with id ${id} not found.`);
+                console.warn(`BackBoard: Board with id '${id}' not found. Cannot trigger item '${itemId}'.`);
                 return;
             }
+            console.info(`BackBoard: Triggering item '${itemId}' on board '${id}' with value '${value}'.`);
             board.trigger(itemId, value);
+        });
+
+        this.ipc.handle('unregister-board', async (_: IpcMainInvokeEvent, {id}: { id: string }) => {
+            console.info(`BackBoard: Unregistering board with id '${id}'...`);
+            const board = this.boards.get(id);
+            if (!board) {
+                console.warn(`BackBoard: Board with id '${id}' not found for unregistration.`);
+                return {success: false, error: `Board with id '${id}' not found.`};
+            }
+            try {
+                await board.close();
+                this.boards.delete(id);
+                console.info(`BackBoard: Board '${id}' unregistered successfully.`);
+                return {success: true};
+            } catch (err) {
+                console.error(`BackBoard: Failed to unregister board '${id}':`, err);
+                return {success: false, error: `Failed to unregister board '${id}': ${err.message}`};
+            }
         });
     }
 
     async close() {
-        console.info("Closing all boards...");
+        console.info("BackBoard: Closing all boards...");
         for (const [id, board] of this.boards) {
             try {
                 await board.close();
-                console.info(`Board ${id} closed successfully.`);
+                console.info(`BackBoard: Board '${id}' closed successfully.`);
             } catch (err) {
-                console.error(`Failed to close board ${id}:`, err);
+                console.error(`BackBoard: Failed to close board '${id}':`, err);
             }
         }
         this.boards.clear();
-        console.info("All boards closed.");
+        console.info("BackBoard: All boards closed.");
 
-        await this.sim.disconnect();
-        console.info("SimConnect disconnected.");
+        if (this.sim.isConnected()) {
+            console.info("BackBoard: Disconnecting SimConnect...");
+            await this.sim.disconnect();
+            console.info("BackBoard: SimConnect disconnected.");
+        } else {
+            console.info("BackBoard: SimConnect already disconnected.");
+        }
     }
 }
