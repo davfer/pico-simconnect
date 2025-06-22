@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-
-const props = defineProps<{
+defineProps<{
+  scope: string;
   connected: boolean;
   status: string;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   (e: "connect"): void;
   (e: "disconnect"): void;
 }>();
 </script>
 
 <template>
-  <div class="flex flex-row border-2 p-2 m-2 items-center justify-between">
-    <span><strong>Board</strong></span>
+  <div class="flex flex-row border-2 p-1 m-1 items-center justify-between">
+    <span><strong>{{ scope }}</strong></span>
     <span class="ml-1 grow">{{ status }}</span>
-    <button v-if="!connected" class="btn btn-sm btn-success" @click="$emit('connect')">Connect</button>
-    <button v-else class="btn btn-sm btn-danger" @click="$emit('disconnect')">Disconnect</button>
+    <button v-if="!connected" class="btn btn-xs btn-success" @click="$emit('connect')">Connect</button>
+    <button v-else class="btn btn-xs btn-danger" @click="$emit('disconnect')">Disconnect</button>
   </div>
 </template>
 

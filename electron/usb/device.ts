@@ -166,7 +166,7 @@ export default class Device {
             throw new Error('Device not opened');
         }
         this.device.write([cmd, ...data]);
-        console.log(`Command ${cmd} sent with data:`, data);
+        //console.trace(`Command ${cmd} sent with data:`, data);
 
         const res = this.device.readSync();
         if (!res.length || res[0] !== 0) {

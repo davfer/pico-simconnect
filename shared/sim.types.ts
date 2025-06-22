@@ -18,11 +18,27 @@ export interface ReadDescriptor extends Descriptor {
 }
 
 export enum DataDefinitionType {
-    BOOLEAN = 5, // SimConnectDataType.STRING8,
-    CHAR = 5, // SimConnectDataType.STRING8,
-    FLOAT = 3, //SimConnectDataType.FLOAT32,
-    UINT = 1, //SimConnectDataType.INT32,
-    SHORT = 1,    //SimConnectDataType.INT32,
+    BOOLEAN, // SimConnectDataType.STRING8,
+    CHAR, // SimConnectDataType.STRING8,
+    FLOAT, //SimConnectDataType.FLOAT32,
+    UINT, //SimConnectDataType.INT32,
+    SHORT,    //SimConnectDataType.INT32,
+}
+
+export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
+    switch (type) {
+        case DataDefinitionType.BOOLEAN:
+        case DataDefinitionType.CHAR:
+            return 5; // SimConnectDataType.STRING8
+        case DataDefinitionType.FLOAT:
+            return 3; // SimConnectDataType.FLOAT32
+        case DataDefinitionType.UINT:
+            return 1; // SimConnectDataType.INT32
+        case DataDefinitionType.SHORT:
+            return 1; // SimConnectDataType.INT32
+        default:
+            throw new Error(`Unsupported data definition type: ${type}`);
+    }
 }
 
 export interface DataDefinition<T = unknown> {
@@ -43,4 +59,5 @@ export interface DataDescriptor extends Descriptor {
     dataName: string; // Name of the CDU data
     dataId: number; // ID of the CDU data
     dataDefinition: number; // Definition of the CDU data
+    dataParserFnName?: string; // Optional parser for the data
 }

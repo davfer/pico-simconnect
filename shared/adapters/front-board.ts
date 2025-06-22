@@ -9,9 +9,26 @@ export default class FrontBoard {
     }
 
 
-    connectToSimulator() {
-        // TODO: Implement simulator connection logic
-        console.info("FrontBoard: connectToSimulator called (not implemented).");
+    async connectToSimulator() {
+        console.info("FrontBoard: connectToSimulator called.");
+        const res = await this.ipcRenderer.invoke('init-sim', {})
+        if (!res || !res.success) {
+            const errorMsg = `Failed to connect to simulator: ${res?.error || 'Unknown error'}`;
+            console.error(`FrontBoard: ${errorMsg}`);
+            throw new Error(errorMsg);
+        }
+        console.info("FrontBoard: Simulator connection established.");
+    }
+
+    async disconnectFromSimulator() {
+        console.info("FrontBoard: disconnectFromSimulator called.");
+        const res = await this.ipcRenderer.invoke('disconnect-sim', {})
+        if (!res || !res.success) {
+            const errorMsg = `Failed to disconnect from simulator: ${res?.error || 'Unknown error'}`;
+            console.error(`FrontBoard: ${errorMsg}`);
+            throw new Error(errorMsg);
+        }
+        console.info("FrontBoard: Simulator disconnected successfully.");
     }
 
 
@@ -25,11 +42,11 @@ export default class FrontBoard {
         } as InitBoardProps)
         console.info(`FrontBoard: Board registration response for '${id}':`, res);
         if (!res || !res.success) {
-            const errorMsg = `Failed to register board '${id}': ${res?.error || 'Unknown error'}`;
+            const errorMsg = `Failed to register board '${id}': ${res?.error || 'Unknown error'}`
             console.error(`FrontBoard: ${errorMsg}`);
             throw new Error(errorMsg);
         }
-        console.info(`FrontBoard: Board '${id}' registered successfully.`);
+        console.info(`FrontBoard: Board '${id}' registered successfully.`)
     }
 
     async unregisterBoard(id: string) {
@@ -43,7 +60,7 @@ export default class FrontBoard {
         console.info(`FrontBoard: Board '${id}' unregistered successfully.`);
     }
 
-    onChange(boardId: string, callback: (itemId: string, value: number) => void) {
+    onChange(boardId: string, callback: (itemId: string, value: any) => void) {
         console.info(`FrontBoard: Registering change listener for board '${boardId}'...`);
         this.ipcRenderer.on('board-changed', (_event, eventBoardId, itemId, value) => {
             if (eventBoardId === boardId) {
@@ -62,19 +79,11 @@ export default class FrontBoard {
             itemId: itemId,
             value: value
         }
-        // Note: 'trigger-board' in BackBoard is ipc.on, not ipc.handle, so it doesn't return a response.
-        // If a response is needed, BackBoard should be changed to use ipc.handle.
-        // For now, assuming no direct response is expected or processed from this specific trigger.
-        this.ipcRenderer.send('trigger-board', req);
-        // Original code used invoke, which implies a response. If 'trigger-board' is meant to be fire-and-forget,
-        // then send is more appropriate. If a response was actually expected, then BackBoard needs adjustment.
-        // For now, I've changed it to 'send' to match BackBoard's 'ipc.on'.
-        // The original code had:
-        // const res = await this.ipcRenderer.invoke('trigger-board', req) as GenericResponse;
-        // if (!res || !res.success) {
-        //     console.error("FrontBoard: Failed to trigger item:", res.error);
-        //     throw new Error(`Failed to trigger item: ${res.error}`);
-        // }
+        const res = await this.ipcRenderer.invoke('trigger-board', req) as GenericResponse;
+        if (!res || !res.success) {
+            console.error("FrontBoard: Failed to trigger item:", res.error);
+            throw new Error(`Failed to trigger item: ${res.error}`);
+        }
         console.info(`FrontBoard: Item '${itemId}' on board '${boardId}' trigger sent.`);
     }
 }

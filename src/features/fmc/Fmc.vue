@@ -45,6 +45,7 @@ const enum simids {
   PMDG_DATA,
 }
 
+const boardid = 'fmc';
 const layout = [
   {id: "CDU_L1", front: {style: "rectangle-sm", value: "-"}},
   {id: "CDU_L2", front: {style: "rectangle-sm", value: "-"}},
@@ -226,8 +227,18 @@ const layout = [
     sim: {id: "cdu_OFST_light", type: "read", simid: simids.PMDG_DATA, name: "CDU_annunOFST"} as ReadDescriptor
   },
   {
+    id: "CDU_SCREEN_CONTENT",
+    front: {style: "rectangle"},
+    // iface: {id: 'cdu_screen', type: BoardInterfaceType.SCREEN, offset: 0} as BoardItem,
+    sim: {
+      id: "cud_data_lines",
+      type: "read",
+      name: "CduDataLines"
+    } as ReadDescriptor
+  },
+  {
     id: "CDU_SCREEN",
-    onSimReadFnName: "CduScreenReadFn",
+    onSimReadFnName: "CduScreenReadFn", // to send directly to hardware
     sim: {
       id: "cdu_SCREEN",
       simid: simids.CDU_SCREEN,
@@ -240,19 +251,20 @@ const layout = [
       dataName: PMDG_NG3_CDU_0_NAME,
       dataId: PMDG_NG3_CDU_0_ID,
       dataDefinition: PMDG_NG3_CDU_0_DEFINITION,
+      dataParserFnName: "CduScreenParseFn"
     } as DataDescriptor
   },
   {
     id: 'PMDG_NG3_Data',
-    onSimReadFnName: "PmdgNg3DataReadFn",
     sim: {
       id: 'PMDG_NG3_Data',
       simid: simids.PMDG_DATA,
       type: "data",
-      size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 0), 0),
+      size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 1), 0),
       dataName: PMDG_NG3_DATA_NAME,
       dataId: PMDG_NG3_DATA_ID,
       dataDefinition: PMDG_NG3_DATA_DEFINITION,
+      dataParserFnName: "PmdgNg3DataParseFn"
     } as DataDescriptor
   }
 ] as BoardItem[]
@@ -263,19 +275,19 @@ const screenGrid = reactive(Array.from({length: 14}, () =>
 
 const handleClick = (btn: BoardItem) => {
   console.log(`Button clicked: ${btn.id}`);
-  props.board.triggerItem('fmc', btn.id, 1);
+  props.board.triggerItem(boardid, btn.id, 1);
 };
 
 const items = reactive(new Map<string, number>());
-const register = () => {
+const register = async () => {
   console.log("Registering");
   status.value = "Connecting...";
 
   try {
-    props.board.registerBoard('fmc', 0xCafe, 0x4004, layout);
+    await props.board.registerBoard(boardid, 0xCafe, 0x4004, layout);
   } catch (e) {
-    console.error("Failed to register board:", e);
-    status.value = `Fail: ${e}`;
+    console.error("Failed to register board:", e)
+    status.value = `Fail: ${e}`
     return;
   }
 
@@ -285,7 +297,11 @@ const register = () => {
       return;
     }
     items.set(item.id, 0)
-    props.board.onChange(item.id, (_: string, value: number) => {
+    props.board.onChange(item.id, (_: string, value: any) => {
+      if (item.id === "CDU_SCREEN_CONTENT") {
+        console.log("Updating screen content");
+        return;
+      }
       items.set(item.id, value)
     });
   });
@@ -312,7 +328,7 @@ const status = ref("Standby -- press Connect");
 
 <template>
   <div>
-    <CommandBar :connected="connected" :status="status" @connect="register"/>
+    <CommandBar scope="FMC Board" :connected="connected" :status="status" @connect="register"/>
   </div>
   <div class="bg-gray-700 text-white p-4 rounded-lg shadow-lg">
     <div class="grid grid-cols-[64px_auto_64px] gap-0 grid-rows-1">
@@ -343,7 +359,7 @@ const status = ref("Standby -- press Connect");
                   :registered="items.has(i.id)"
                   :type="i.front?.style" :value="i.front?.value"
                   @click="handleClick(i)"/>
-          <Led :color="'green'" :type="'rectangle-sm'" :value="items.get(layout[69].id) === 1" />
+          <Led :color="'green'" :type="'rectangle-sm'" :value="items.get(layout[69].id) === 1" style="margin-top: 15px;margin-left: 15px" />
         </div>
         <div class="col-span-full grid grid-cols-6 gap-5">
           <Button v-for="i in layout.slice(17, 23)" :key="i.id" :clicked="items.get(i.id) === 1"
