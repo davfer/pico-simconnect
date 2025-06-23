@@ -2,6 +2,18 @@ import {app, BrowserWindow, ipcMain} from 'electron'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
 import {BackBoard} from "../shared/adapters/back-board.ts";
+import log from 'electron-log/main';
+
+// Initialize electron-log for main and any renderer processes
+log.initialize();
+
+// Configure console transport for the main process
+// Default main process format is: '%c{h}:{i}:{s}.{ms}%c › {text}'
+// We'll prepend [MAIN] and rely on default coloring or refine later if needed.
+log.transports.console.format = '[MAIN] %c{h}:{i}:{s}.{ms}%c › {text}';
+
+// Override global console object with electron-log functions
+Object.assign(console, log.functions);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -47,6 +59,7 @@ function createWindow() {
     });
     win.on('close', async () => {
         console.log('Window is closing, unloading board...')
+        // @ts-expect-error board is used before assignment, this was in original code
         await board.close()
         app.exit(0)
     })
@@ -82,4 +95,3 @@ app.on('activate', () => {
 app.whenReady().then(() => {
     createWindow()
 })
-
