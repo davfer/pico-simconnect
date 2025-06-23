@@ -10,7 +10,7 @@ export default class Board {
 
     constructor(private sim: ISim, vendorId: number, productId: number, private items: BoardItem[]) {
         const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
-        this.device = new Device(vendorId, productId, interfaces);
+        this.device = new Device(vendorId, productId, interfaces, 100);
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
@@ -42,7 +42,7 @@ export default class Board {
                             }
                         }
                     }
-                    // Does it has a DAL callback attached
+                    // Does it has a DAL callback attached?
                     if (item.onSimReadFnName) {
                         const dalCallback = onSimReadEventCallbacks[item.onSimReadFnName]
                         if (dalCallback) {

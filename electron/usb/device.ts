@@ -9,7 +9,7 @@ import {
 import {UsbDevice} from "../../shared/usb.types.ts";
 
 const CMD_TRIGGER_PIN = 0x03;
-const CMD_READ_PINS = 0x04;
+const CMD_READ_PINS_MASKED = 0x05;
 
 export type BoardInterfaceChangeCallback = (value: BoardInterfaceValue) => void
 
@@ -111,7 +111,7 @@ export default class Device {
             }
 
             try {
-                const response = await this.sendCmd(CMD_READ_PINS, []);
+                const response = await this.sendCmd(CMD_READ_PINS_MASKED, []);
                 //console.trace('Response reading pins:', response);
                 await this.parsePollingResponse(response)
             } catch (error) {
@@ -166,7 +166,7 @@ export default class Device {
             throw new Error('Device not opened');
         }
         this.device.write([cmd, ...data]);
-        //console.trace(`Command ${cmd} sent with data:`, data);
+        //log.log(`Command ${cmd} sent with data:`, data);
 
         const res = this.device.readSync();
         if (!res.length || res[0] !== 0) {

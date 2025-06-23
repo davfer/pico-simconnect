@@ -383,6 +383,24 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "PED_FltDkDoorSel", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"} // 0: UNLKD  1 AUTO pushed in  2: AUTO  3: DENY
 ]
 
+export function PMDG_NG3_Data_Size() {
+    return PMDG_NG3_Data.reduce((acc, def) => {
+        let size = 1
+        switch (def.dataType) {
+            case DataDefinitionType.UINT:
+                size = 4
+                break
+            case DataDefinitionType.SHORT:
+                size = 2
+                break
+            case DataDefinitionType.FLOAT:
+                size = 4
+                break
+        }
+        return acc + ((def.size || 1) * size)
+    }, 0);
+}
+
 // struct PMDG_NG3_Data
 // {
 // 	////////////////////////////////////////////

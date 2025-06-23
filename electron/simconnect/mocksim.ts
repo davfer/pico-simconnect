@@ -1,4 +1,5 @@
-import {DataDescriptor, Descriptor} from "@shared/sim.types.ts";
+import {DataDefinitionType, DataDescriptor, Descriptor} from "@shared/sim.types.ts";
+import {PMDG_NG3_Data, PMDG_NG3_Data_Size} from "@shared/definitions/PMDG_NG3_SDK.ts";
 
 export class Mocksim {
     private connected = false;
@@ -45,11 +46,46 @@ export class Mocksim {
                     }
                     dataToSend.writeUInt8(1, dd.size-1); // CDU powered
                 } else if (dd.id === "PMDG_NG3_Data") {
-                    dataToSend = Buffer.alloc(256, 0)
-                    dataToSend.writeInt8(2, 0);
-                    dataToSend.writeInt8(1, 1);
-                    dataToSend.writeInt8(0, 2);
-                    dataToSend.writeInt8(1, 3);
+                    dataToSend = Buffer.alloc(PMDG_NG3_Data_Size(), 0)
+
+                    let offset = 0;
+                    for (const d of PMDG_NG3_Data) {
+                        const size = d.size || 1;
+                        for (let i = 0; i < size; i++) {
+                            if (offset >= dataToSend.length) {
+                                console.warn(`PMDG_NG3_Data: Offset ${offset} exceeds data length ${dataToSend.length}`);
+                                break;
+                            }
+
+                            let dataWrote = 0
+                            switch (d.dataType) {
+                                case DataDefinitionType.BOOLEAN:
+                                    let randomBoolean = Math.random() < 0.5 ? 1 : 0; // Random boolean value
+                                    dataToSend.writeUInt8(randomBoolean, offset);
+                                    dataWrote = 1
+                                    break;
+                                case DataDefinitionType.CHAR:
+                                    dataToSend.writeUInt8(0, offset);
+                                    dataWrote = 1
+                                    break;
+                                case DataDefinitionType.FLOAT:
+                                    dataToSend.writeFloatLE(0.0, offset);
+                                    dataWrote = 4
+                                    break;
+                                case DataDefinitionType.UINT:
+                                    dataToSend.writeUInt32LE(0, offset);
+                                    dataWrote = 4
+                                    break;
+                                case DataDefinitionType.SHORT:
+                                    dataToSend.writeInt16LE(0, offset);
+                                    dataWrote = 2
+                                    break;
+                                default:
+                                    throw new Error(`Unsupported PMDG_NG3_Data type: ${d.dataType}`);
+                            }
+                            offset += dataWrote;
+                        }
+                    }
                 } else {
                     return;
                 }

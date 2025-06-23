@@ -3,25 +3,26 @@ import {DataDefinitionType, Descriptor} from "@shared/sim.types";
 import Device from "@electron/usb/device";
 import {extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
 import {PMDG_NG3_Data} from "@shared/definitions/PMDG_NG3_SDK.ts";
+import log from "electron-log/main";
 
 export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
-    CduScreenReadFn: async (_: Descriptor, device: Device, value: any) => {
-        //console.trace("CduScreenReadFn", descriptor, device, value)
+    CduScreenReadFn: async (descriptor: Descriptor, device: Device, value: any) => {
+        log.log("CduScreenReadFn", descriptor, device, value)
 
         const data = extractCduScreenState(value)
-        for (let i = 0; i < data.lines.length; i++) {
+        for (let y = 0; y < data.lines.length; y++) {
             // Will send 2 commands of 12 cells each
             let bytesToSend = []
-            for (let j = 0; j < data.lines[i].length; j++) {
-                bytesToSend.push(data.lines[i].charCodeAt(0))
+            for (let j = 0; j < data.lines[y].length; j++) {
+                bytesToSend.push(data.lines[y].charCodeAt(j))
                 bytesToSend.push(0) // padding byte
                 bytesToSend.push(0) // padding byte
             }
 
             // SET_PIXEL [x, y, count, {char, color, type}...]
-            await device.sendCmd(0x01, [0, 0, 12, ...bytesToSend.slice(0, 36)]);
+            await device.sendCmd(0x01, [0, y, 12, ...bytesToSend.slice(0, 36)]);
             // SET_PIXEL [x, y, count, {char, color, type}...]
-            await device.sendCmd(0x01, [0, 12, 12, ...bytesToSend.slice(36)]);
+            await device.sendCmd(0x01, [12, y, 12, ...bytesToSend.slice(36)]);
         }
     }
 };
@@ -51,7 +52,8 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
             let values = [];
             for (let j = 0; j < size; j++) {
                 if (offset >= data.length) {
-                    console.warn(`PmdgNg3DataParseFn: Offset ${offset} exceeds data length ${data.length}`);
+                    // TODO Reenable once we have sim connected
+                    //console.warn(`PmdgNg3DataParseFn: Offset ${offset} exceeds data length ${data.length}`);
                     break;
                 }
 
