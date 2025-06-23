@@ -62,9 +62,9 @@ export default class FrontBoard {
 
     onChange(boardId: string, callback: (itemId: string, value: any) => void) {
         console.info(`FrontBoard: Registering change listener for board '${boardId}'...`);
-        this.ipcRenderer.on('board-changed', (_event, eventBoardId, itemId, value) => {
-            if (eventBoardId === boardId) {
-                console.info(`FrontBoard: Item '${itemId}' on board '${boardId}' changed with value '${value}'.`);
+        this.ipcRenderer.on('board-changed', (_event, {id, itemId, value}) => {
+            //console.trace(`FrontBoard: Item '${itemId}' on board '${boardId}' changed with value '${value}'.`);
+            if (id === boardId) {
                 callback(itemId, value);
             }
         });
@@ -73,7 +73,7 @@ export default class FrontBoard {
     }
 
     async triggerItem(boardId: string, itemId: string, value: number) {
-        console.info(`FrontBoard: Triggering item '${itemId}' on board '${boardId}' with value '${value}'...`);
+        //console.trace(`FrontBoard: Triggering item '${itemId}' on board '${boardId}' with value '${value}'...`);
         const req: TriggerBoardProps = {
             id: boardId,
             itemId: itemId,
@@ -84,6 +84,6 @@ export default class FrontBoard {
             console.error("FrontBoard: Failed to trigger item:", res.error);
             throw new Error(`Failed to trigger item: ${res.error}`);
         }
-        console.info(`FrontBoard: Item '${itemId}' on board '${boardId}' trigger sent.`);
+        console.trace(`FrontBoard: Item '${itemId}' on board '${boardId}' trigger sent.`);
     }
 }

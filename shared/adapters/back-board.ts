@@ -1,9 +1,9 @@
 import Board from "@electron/board";
 import {InitBoardProps, TriggerBoardProps} from "@shared/adapters/ipc.types.ts";
 import {BrowserWindow} from "electron";
-import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
 import {ISim} from "@electron/simconnect/sim.types.ts";
 import {Mocksim} from "@electron/simconnect/mocksim.ts";
+import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
 
 export class BackBoard {
     private boards = new Map<string, Board>();
@@ -55,9 +55,9 @@ export class BackBoard {
 
             // attach frontend listeners
             for (const item of items) {
-                board.onChange(item.id, (boardId, value) => { // boardId here is actually the board's main id from the constructor
-                    console.info(`BackBoard: Board '${boardId}' triggered item '${item.id}' with value '${value}'`);
-                    this.mainWindow.webContents.send('board-changed', boardId, item.id, value);
+                board.onChange(item.id, (itemId, value) => { // boardId here is actually the board's main id from the constructor
+                    //console.trace(`BackBoard: Board '${id}' triggered item '${itemId}' with value '${value}'`);
+                    this.mainWindow.webContents.send('board-changed', {id, itemId, value});
                 })
             }
 

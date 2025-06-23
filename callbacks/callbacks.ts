@@ -5,8 +5,8 @@ import {extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
 import {PMDG_NG3_Data} from "@shared/definitions/PMDG_NG3_SDK.ts";
 
 export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
-    CduScreenReadFn: async (descriptor: Descriptor, device: Device, value: any) => {
-        console.info("CduScreenReadFn", descriptor, device, value)
+    CduScreenReadFn: async (_: Descriptor, device: Device, value: any) => {
+        //console.trace("CduScreenReadFn", descriptor, device, value)
 
         const data = extractCduScreenState(value)
         for (let i = 0; i < data.lines.length; i++) {
@@ -34,13 +34,13 @@ export const onDeviceReadEventCallbacks: Record<string, OnDeviceReadEventCallbac
 
 export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> = {
     CduScreenParseFn: (data: Buffer) => {
-        console.info("CduScreenParseFn", data);
+        //console.trace("CduScreenParseFn", data);
 
         const cduData = extractCduScreenState(data);
         return {"CduDataLines": cduData.lines, "CduPowered": cduData.powered};
     },
     PmdgNg3DataParseFn: (data: Buffer) => {
-        console.info("PmdgNg3DataParseFn", data);
+        //console.trace("PmdgNg3DataParseFn", data);
 
         let result: Record<string, any> = {};
         let offset = 0;
@@ -51,7 +51,7 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
             let values = [];
             for (let j = 0; j < size; j++) {
                 if (offset >= data.length) {
-                    console.warn(`Offset ${offset} exceeds data length ${data.length}`);
+                    console.warn(`PmdgNg3DataParseFn: Offset ${offset} exceeds data length ${data.length}`);
                     break;
                 }
 

@@ -22,14 +22,14 @@ export default class Board {
                             const dplCallback = onDataParserEventCallbacks[dDef.dataParserFnName]
                             if (dplCallback) {
                                 const parsed = dplCallback(value);
-                                console.info(`Called DPL SIM callback ${dDef.dataParserFnName} got`, parsed);
+                                //console.trace(`Called DPL SIM callback ${dDef.dataParserFnName} got`, parsed);
 
                                 for (const [key, val] of Object.entries(parsed)) {
                                     const readItem = this.items.find(
                                         i => i.sim?.type == "read" && (i.sim as ReadDescriptor).name === key
                                     );
                                     if (readItem?.sim?.callback) {
-                                        console.info(`Triggering SIM READ for ${key} with value ${val}`);
+                                        //console.trace(`Triggering SIM READ for ${key} with value ${val}`);
                                         try {
                                             readItem.sim.callback(readItem.sim, val as any);
                                         } catch (err) {
@@ -46,7 +46,7 @@ export default class Board {
                     if (item.onSimReadFnName) {
                         const dalCallback = onSimReadEventCallbacks[item.onSimReadFnName]
                         if (dalCallback) {
-                            console.info(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, value);
+                            //console.trace(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, value);
                             dalCallback(cbDescriptor, this.device, value);
                         } else {
                             console.warn(`No DAL SIM callback found for ${item.onSimReadFnName}`);
@@ -56,7 +56,7 @@ export default class Board {
                     if (item.sim?.type == "read") {
                         const eventCallback = this.listeners.get(item.id);
                         if (eventCallback) {
-                            console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
+                            //console.trace(`Triggering FRONTEND for ${item.id} with value ${value}`);
                             eventCallback(item.id, value);
                         }
                     }
@@ -81,7 +81,7 @@ export default class Board {
                     if (item.iface?.type == BoardInterfaceType.BUTTON) {
                         const eventCallback = this.listeners.get(item.id);
                         if (eventCallback) {
-                            console.info(`Triggering FRONTEND for ${item.id} with value ${value.value}`);
+                            //console.trace(`Triggering FRONTEND for ${item.id} with value ${value.value}`);
                             eventCallback(item.id, value.value);
                         }
                     }

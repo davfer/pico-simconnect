@@ -36,13 +36,10 @@ export function extractCduScreenState(buffer: Buffer): CduData {
     const cduIsPowered = buffer.readUInt8(buffer.length - 1) === 1;
 
 
-    console.info("Successfully extracted CDU screen state:", screenText)
+    //console.trace("Successfully extracted CDU screen state:", screenText)
     return {
         lines: screenText,
         powered: cduIsPowered
     };
 }
 
-export function extractPmdgData(buffer: Buffer):  {
-
-}

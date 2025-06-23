@@ -3,7 +3,7 @@ import Screen from "./Screen.vue";
 import Button from "./Button.vue";
 import Led from "./Led.vue";
 import {Pixel} from "./fmc.types.ts";
-import {onUnmounted, reactive, ref} from "vue";
+import {computed, onUnmounted, reactive, ref} from "vue";
 import {BoardButton, BoardInterfaceType, BoardItem, BoardLed} from "@shared/board.types.ts";
 import {
   EVT_CDU_L_CLR,
@@ -269,16 +269,38 @@ const layout = [
   }
 ] as BoardItem[]
 
-const screenGrid = reactive(Array.from({length: 14}, () =>
-    Array.from({length: 24}, () => ({char: "A", color: "white"}))
-) as Pixel[][]);
+const screenGrid = computed<Pixel[][]>(() => {
+  const columns = 24;
+  const rows = 14;
+  const lines = items.get("CDU_SCREEN_CONTENT")
+  if (!lines || !Array.isArray(lines)) {
+    return Array.from({length: rows}, () => Array.from({length: columns}, () => ({char: "A", color: "white"}))) as Pixel[][];
+  }
+
+  let grid = Array.from({length: rows}, () => Array.from({length: columns}, () => ({char: " ", color: "white"}))) as Pixel[][];
+  for (let row = 0; row < rows; row++) {
+    const line = lines[row] || [];
+    for (let i = 0; i < line.length; i++) {
+      let char = line[i];
+      if (i >= columns) break; // Prevent overflow
+      if (!char) char = "?"; // Skip empty characters
+
+      grid[row][i] = {
+        char: char,
+        color: "white"
+      } as Pixel;
+    }
+  }
+
+  return grid;
+})
 
 const handleClick = (btn: BoardItem) => {
   console.log(`Button clicked: ${btn.id}`);
   props.board.triggerItem(boardid, btn.id, 1);
 };
 
-const items = reactive(new Map<string, number>());
+const items = reactive(new Map<string, number | boolean | string[]>());
 const register = async () => {
   console.log("Registering");
   status.value = "Connecting...";
@@ -297,13 +319,10 @@ const register = async () => {
       return;
     }
     items.set(item.id, 0)
-    props.board.onChange(item.id, (_: string, value: any) => {
-      if (item.id === "CDU_SCREEN_CONTENT") {
-        console.log("Updating screen content");
-        return;
-      }
-      items.set(item.id, value)
-    });
+  });
+
+  props.board.onChange(boardid, (itemId: string, value: any) => {
+    items.set(itemId, value)
   });
 
   connected.value = true;

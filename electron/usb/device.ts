@@ -112,7 +112,7 @@ export default class Device {
 
             try {
                 const response = await this.sendCmd(CMD_READ_PINS, []);
-                console.log('Response:', response);
+                //console.trace('Response reading pins:', response);
                 await this.parsePollingResponse(response)
             } catch (error) {
                 console.error('Error during polling:', error);
