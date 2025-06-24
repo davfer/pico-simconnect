@@ -16,6 +16,7 @@ export type BoardInterfaceChangeCallback = (value: BoardInterfaceValue) => void
 export default class Device {
     private device: HID | null = null;
     private listeners = new Map<string, (value: BoardInterfaceValue) => void>();
+    private pollingId: NodeJS.Timeout | null = null;
 
     constructor(private vendorId: number, private productId: number, private interfaces: BoardInterface[], private pollingMs: number = 1000) {
     }
@@ -98,13 +99,14 @@ export default class Device {
         if (this.device) {
             this.device.close();
             this.device = null;
+            this.pollingId?.close()
             console.log(`Device closed: ${this.vendorId}:${this.productId}`);
         }
     }
 
     private async startPolling() {
         // Start polling logic here if needed
-        setInterval(async () => {
+        this.pollingId = setInterval(async () => {
             if (!this.device) {
                 console.warn('Device not opened, cannot poll');
                 return
@@ -132,6 +134,10 @@ export default class Device {
             for (let bit = 0; bit < 8; bit++) {
                 const pinOffset = inputBlockOffset + bit;
                 const pinValue = (response[i] >> bit) & 1;
+
+                if (pinValue === 1) {
+                    console.info(`Pin ${pinOffset} is HIGH`);
+                }
 
                 const iface = this.interfaces.filter(i => i?.type === BoardInterfaceType.BUTTON).find(i => (i as BoardButton)?.offset === pinOffset) as BoardButton | undefined;
                 if (!iface) {

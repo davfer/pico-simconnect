@@ -24,10 +24,17 @@ const simconnect = () => {
   }
 };
 
+const disconnect = () => {
+  board.disconnectFromSimulator();
+  simconnected.value = false;
+  simstatus.value = "Disconnected";
+};
+
 </script>
 
 <template>
-  <CommandBar scope="Simulator" :connected="simconnected" :status="simstatus" @connect="simconnect"/>
+  <CommandBar scope="Simulator" :connected="simconnected" :status="simstatus" @connect="simconnect"
+              @disconnect="disconnect"/>
   <Fmc :board="board"/>
 </template>
 

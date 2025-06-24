@@ -3,11 +3,10 @@ import {DataDefinitionType, Descriptor} from "@shared/sim.types";
 import Device from "@electron/usb/device";
 import {extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
 import {PMDG_NG3_Data} from "@shared/definitions/PMDG_NG3_SDK.ts";
-import log from "electron-log/main";
 
 export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
-    CduScreenReadFn: async (descriptor: Descriptor, device: Device, value: any) => {
-        log.log("CduScreenReadFn", descriptor, device, value)
+    CduScreenReadFn: async (_: Descriptor, device: Device, value: any) => {
+        //log.log("CduScreenReadFn", descriptor, device, value)
 
         const data = extractCduScreenState(value)
         for (let y = 0; y < data.lines.length; y++) {
