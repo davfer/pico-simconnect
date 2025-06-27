@@ -14,6 +14,7 @@ export default class Board {
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
+                console.info(`Registering SIM item ${item.id} of type ${item.sim.type}`);
                 item.sim.callback = (cbDescriptor, value) => {
                     // Can we parse the raw data?
                     if (item.sim?.type == "data") {
@@ -29,7 +30,7 @@ export default class Board {
                                         i => i.sim?.type == "read" && (i.sim as ReadDescriptor).name === key
                                     );
                                     if (readItem?.sim?.callback) {
-                                        //console.trace(`Triggering SIM READ for ${key} with value ${val}`);
+                                        //console.info(`Triggering SIM READ for ${key} with value ${val}`);
                                         try {
                                             readItem.sim.callback(readItem.sim, val as any);
                                         } catch (err) {
@@ -46,7 +47,7 @@ export default class Board {
                     if (item.onSimReadFnName) {
                         const dalCallback = onSimReadEventCallbacks[item.onSimReadFnName]
                         if (dalCallback) {
-                            //console.trace(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, value);
+                            //console.info(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, value);
                             dalCallback(cbDescriptor, this.device, value);
                         } else {
                             console.warn(`No DAL SIM callback found for ${item.onSimReadFnName}`);
@@ -56,7 +57,7 @@ export default class Board {
                     if (item.sim?.type == "read") {
                         const eventCallback = this.listeners.get(item.id);
                         if (eventCallback) {
-                            //console.trace(`Triggering FRONTEND for ${item.id} with value ${value}`);
+                            // console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
                             eventCallback(item.id, value);
                         }
                     }
@@ -106,7 +107,7 @@ export default class Board {
         this.listeners.set(id, callback);
     }
 
-    public trigger(id: string, value: number) {
+    public async trigger(id: string, value: number) {
         if (!this.device) {
             throw new Error('Device not opened');
         }
@@ -117,9 +118,9 @@ export default class Board {
         }
 
         if (item.iface && item.iface.type === BoardInterfaceType.LED) {
-            this.device.trigger(item.iface.id, value);
+            await this.device.trigger(item.iface.id, value);
         } else if (item.sim && item.sim.type === "write") {
-            this.sim.trigger(item.id, value);
+            this.sim.trigger(item.sim.id, value);
         } else {
             throw new Error(`Item with id ${id} is not a triggerable interface or sim item`);
         }

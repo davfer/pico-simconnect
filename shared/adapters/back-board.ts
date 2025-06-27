@@ -4,11 +4,12 @@ import {BrowserWindow} from "electron";
 import {ISim} from "@electron/simconnect/sim.types.ts";
 import {Mocksim} from "@electron/simconnect/mocksim.ts";
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
+import {Sim} from "@electron/simconnect/sim.ts";
 
 export class BackBoard {
     private boards = new Map<string, Board>();
-    // private sim: ISim = new Sim();
-    private sim: ISim = new Mocksim();
+    private sim: ISim = new Sim();
+    // private sim: ISim = new Mocksim();
 
     constructor(private ipc: Electron.IpcMain, private mainWindow: BrowserWindow) {
         console.info("BackBoard: Initializing...");
@@ -56,7 +57,7 @@ export class BackBoard {
             // attach frontend listeners
             for (const item of items) {
                 board.onChange(item.id, (itemId, value) => { // boardId here is actually the board's main id from the constructor
-                    //console.trace(`BackBoard: Board '${id}' triggered item '${itemId}' with value '${value}'`);
+                    //console.log(`BackBoard: Board '${id}' triggered item '${itemId}' with value '${JSON.stringify(value)}'`);
                     this.mainWindow.webContents.send('board-changed', {id, itemId, value});
                 })
             }
@@ -66,7 +67,7 @@ export class BackBoard {
             return {success: true};
         });
 
-        this.ipc.handle('trigger-board', (_: IpcMainInvokeEvent, args: TriggerBoardProps) => {
+        this.ipc.handle('trigger-board', async (_: IpcMainInvokeEvent, args: TriggerBoardProps) => {
             const {id, itemId, value} = args;
             const board = this.boards.get(id);
             if (!board) {
@@ -74,7 +75,7 @@ export class BackBoard {
                 return {success: false, error: `Board with id '${id}' not found. (${this.boards.size})`};
             }
             console.info(`BackBoard: Triggering item '${itemId}' on board '${id}' with value '${value}'.`);
-            board.trigger(itemId, value);
+            await board.trigger(itemId, value);
             return {success: true};
         });
 

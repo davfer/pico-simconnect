@@ -8,21 +8,22 @@ export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
     CduScreenReadFn: async (_: Descriptor, device: Device, value: any) => {
         //log.log("CduScreenReadFn", descriptor, device, value)
 
-        const data = extractCduScreenState(value)
-        for (let y = 0; y < data.lines.length; y++) {
-            // Will send 2 commands of 12 cells each
-            let bytesToSend = []
-            for (let j = 0; j < data.lines[y].length; j++) {
-                bytesToSend.push(data.lines[y].charCodeAt(j))
-                bytesToSend.push(0) // padding byte
-                bytesToSend.push(0) // padding byte
-            }
-
-            // SET_PIXEL [x, y, count, {char, color, type}...]
-            await device.sendCmd(0x01, [0, y, 12, ...bytesToSend.slice(0, 36)]);
-            // SET_PIXEL [x, y, count, {char, color, type}...]
-            await device.sendCmd(0x01, [12, y, 12, ...bytesToSend.slice(36)]);
-        }
+        // TODO: value should be of type {screenText: string, cduIsPowered: bool}
+        // const data = extractCduScreenState(value)
+        // for (let y = 0; y < data.lines.length; y++) {
+        //     // Will send 2 commands of 12 cells each
+        //     let bytesToSend = []
+        //     for (let j = 0; j < data.lines[y].length; j++) {
+        //         bytesToSend.push(data.lines[y].charCodeAt(j))
+        //         bytesToSend.push(0) // padding byte
+        //         bytesToSend.push(0) // padding byte
+        //     }
+        //
+        //     // SET_PIXEL [x, y, count, {char, color, type}...]
+        //     await device.sendCmd(0x01, [0, y, 12, ...bytesToSend.slice(0, 36)]);
+        //     // SET_PIXEL [x, y, count, {char, color, type}...]
+        //     await device.sendCmd(0x01, [12, y, 12, ...bytesToSend.slice(36)]);
+        // }
     }
 };
 

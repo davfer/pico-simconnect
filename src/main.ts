@@ -6,10 +6,10 @@ import log from 'electron-log/renderer';
 // Configure console transport for the renderer process
 // Default renderer format is: '{h}:{i}:{s}.{ms} › {text}'
 // We'll prepend [RENDERER] and add %c for consistency with main process format.
-log.transports.console.format = '[RENDERER] %c{h}:{i}:{s}.{ms}%c › {text}';
+// log.transports.console.format = '[RENDERER] %c{h}:{i}:{s}.{ms}%c › {text}';
 
 // Override global console object with electron-log functions for the renderer
-Object.assign(console, log.functions);
+// Object.assign(console, log.functions);
 
 createApp(App).mount('#app').$nextTick(() => {
     // Use contextBridge

@@ -117,12 +117,33 @@ export class Sim {
         //     }
         // })
         this.sim.on('clientData', recvSimObjectData => {
-            console.log("Received client data:", recvSimObjectData);
-            const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID);
+            const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID && d.type === 'data') as DataDescriptor
+            console.log(`Received client data for ${def?.id}:`, recvSimObjectData.requestID, recvSimObjectData.defineCount, recvSimObjectData.entryNumber);
             if (!def || !def.callback) {
-                console.debug(`Received data with untracked ID: ${recvSimObjectData.requestID}`);
+                console.error(`Received data with untracked ID: ${recvSimObjectData.requestID}`);
                 return;
             }
+
+
+            // const CDU_COLUMNS = 24;
+            // const CDU_ROWS = 14;
+            // const screenText: string[] = Array(CDU_ROWS).fill('');
+            //
+            // for (let col = 0; col < CDU_COLUMNS; col++) {
+            //     for (let row = 0; row < CDU_ROWS; row++) {
+            //         const offset = (row * CDU_COLUMNS + col) * 3; // Each character is 3 bytes: char, color, flags
+            //         // I tried readString(1) but that only works with zero-terminated strings, which doesn't seem to be used here
+            //         const symbol = recvSimObjectData.data.readBytes(1).toString("utf-8") // I tried readString(1) but that only works with zero-terminated strings, which doesn't seem to be used here
+            //         const color = recvSimObjectData.data.readBytes(1)[0]
+            //         const flags = recvSimObjectData.data.readBytes(1)[0]
+            //
+            //         screenText[row] += symbol;
+            //     }
+            // }
+            // const cduPowered = recvSimObjectData.data.readBytes(1)[0] === 1
+            // console.log("So...", screenText, cduPowered);
+            //
+
             try {
                 def.callback(def, recvSimObjectData.data);
             } catch (error) {
@@ -184,16 +205,23 @@ export class Sim {
             throw new Error('SimConnect not connected');
         }
 
-        const def = this.definitions.find(d => d.id === id);
+        const def = this.definitions.find(d => d.id === id && d.type == "write") as WriteDescriptor
         if (!def) {
             throw new Error(`No definition found for ID: ${id}`);
         }
+
+        console.log(`Triggering SIM for ${def.id} to ${def.hwid} with value:`, value);
+        // const dataToSet = new RawBuffer(0);
+        // dataToSet.clear();
+        // dataToSet.writeInt32(def.hwid)
+        // dataToSet.writeInt32(value)
+        // this.sim.setClientData(def.dataId, def.dataDefinition, 0, 0, 64, dataToSet.getBuffer()) // 64 bits
 
         this.sim.transmitClientEvent(
             SimConnectConstants.OBJECT_ID_USER,
             def.simid,
             value,
-            0,
+            1,
             EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
         );
     }
@@ -230,6 +258,7 @@ export class Sim {
                 SimConnectPeriod.SIM_FRAME
             );
         } else */
+        console.log(`Subscribing to definition: ${descriptor.id}`, descriptor);
         if (descriptor.type === 'data') {
             const dDescriptor = descriptor as DataDescriptor;
             this.sim.mapClientDataNameToID(dDescriptor.dataName, dDescriptor.dataId);
@@ -242,15 +271,20 @@ export class Sim {
                 ClientDataRequestFlag.CLIENT_DATA_REQUEST_FLAG_CHANGED
             );
         } else if (descriptor.type === 'write') {
-            const writeDescriptor = descriptor as WriteDescriptor;
+            const wDescriptor = descriptor as WriteDescriptor;
             this.sim.mapClientEventToSimEvent(
-                descriptor.simid,
-                '#' + writeDescriptor.hwid,
+                wDescriptor.simid,
+                '#' + wDescriptor.hwid,
             );
+
+            // this.sim.mapClientDataNameToID(wDescriptor.dataName, wDescriptor.dataId)
+            // this.sim.addToClientDataDefinition(wDescriptor.dataDefinition, 0, 64, 0, 0) // 64 bits
+        } else if (descriptor.type === 'read') {
+            // noop
         } else {
             throw new Error(`Unknown descriptor type: ${descriptor.type}`);
         }
-
-        this.definitions.push(descriptor)
+        //
+        // this.definitions.push(descriptor)
     }
 }
