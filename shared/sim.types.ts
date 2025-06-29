@@ -21,8 +21,9 @@ export enum DataDefinitionType {
     BOOLEAN, // SimConnectDataType.STRING8,
     CHAR, // SimConnectDataType.STRING8,
     FLOAT, //SimConnectDataType.FLOAT32,
-    UINT, //SimConnectDataType.INT32,
+    UINT, //SimConnectDataType.UINT32,
     SHORT,    //SimConnectDataType.INT32,
+    USHORT,    //SimConnectDataType.UINT32,
 }
 
 export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
@@ -60,4 +61,5 @@ export interface DataDescriptor extends Descriptor {
     dataId: number; // ID of the CDU data
     dataDefinition: number; // Definition of the CDU data
     dataParserFnName?: string; // Optional parser for the data
+    dataUpdateOnChange?: boolean
 }

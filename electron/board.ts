@@ -2,7 +2,7 @@ import {BoardInterface, BoardInterfaceType, BoardItem} from "@shared/board.types
 import Device from "./usb/device.ts";
 import {onDataParserEventCallbacks, onDeviceReadEventCallbacks, onSimReadEventCallbacks} from "@callbacks/callbacks.ts";
 import {ISim} from "@electron/simconnect/sim.types.ts";
-import {DataDescriptor, ReadDescriptor} from "@shared/sim.types.ts";
+import {DataDescriptor, EventCallback, ReadDescriptor} from "@shared/sim.types.ts";
 
 export default class Board {
     private readonly device: Device;
@@ -15,53 +15,7 @@ export default class Board {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
                 console.info(`Registering SIM item ${item.id} of type ${item.sim.type}`);
-                item.sim.callback = (cbDescriptor, value) => {
-                    // Can we parse the raw data?
-                    if (item.sim?.type == "data") {
-                        const dDef = item.sim as DataDescriptor
-                        if (dDef.dataParserFnName) {
-                            const dplCallback = onDataParserEventCallbacks[dDef.dataParserFnName]
-                            if (dplCallback) {
-                                const parsed = dplCallback(value);
-                                //console.trace(`Called DPL SIM callback ${dDef.dataParserFnName} got`, parsed);
-
-                                for (const [key, val] of Object.entries(parsed)) {
-                                    const readItem = this.items.find(
-                                        i => i.sim?.type == "read" && (i.sim as ReadDescriptor).name === key
-                                    );
-                                    if (readItem?.sim?.callback) {
-                                        //console.info(`Triggering SIM READ for ${key} with value ${val}`);
-                                        try {
-                                            readItem.sim.callback(readItem.sim, val as any);
-                                        } catch (err) {
-                                            // not our problem
-                                        }
-                                    }
-                                }
-                            } else {
-                                console.warn(`No DPL SIM callback found for ${dDef.dataParserFnName}`);
-                            }
-                        }
-                    }
-                    // Does it has a DAL callback attached?
-                    if (item.onSimReadFnName) {
-                        const dalCallback = onSimReadEventCallbacks[item.onSimReadFnName]
-                        if (dalCallback) {
-                            //console.info(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, value);
-                            dalCallback(cbDescriptor, this.device, value);
-                        } else {
-                            console.warn(`No DAL SIM callback found for ${item.onSimReadFnName}`);
-                        }
-                    }
-
-                    if (item.sim?.type == "read") {
-                        const eventCallback = this.listeners.get(item.id);
-                        if (eventCallback) {
-                            // console.info(`Triggering FRONTEND for ${item.id} with value ${value}`);
-                            eventCallback(item.id, value);
-                        }
-                    }
-                }
+                item.sim.callback = this.itemCallbackHandler(item)
                 this.sim.register(item.sim)
             }
             // Register the item to the hw device if it has an interface
@@ -87,6 +41,57 @@ export default class Board {
                         }
                     }
                 })
+            }
+        }
+    }
+
+    private itemCallbackHandler(item : BoardItem) : EventCallback {
+        return (cbDescriptor, value) => {
+            let data = value
+
+            // Can we parse the raw data?
+            if (item.sim?.type == "data") {
+                const dDef = item.sim as DataDescriptor
+                if (dDef.dataParserFnName) {
+                    const dplCallback = onDataParserEventCallbacks[dDef.dataParserFnName]
+                    if (dplCallback) {
+                        data = dplCallback(data);
+                        //console.trace(`Called DPL SIM callback ${dDef.dataParserFnName} got`, parsed);
+
+                        for (const [key, val] of Object.entries(data)) {
+                            const readItem = this.items.find(
+                                i => i.sim?.type == "read" && (i.sim as ReadDescriptor).name === key
+                            );
+                            if (readItem?.sim?.callback) {
+                                //console.info(`Triggering SIM READ for ${key} with value ${val}`);
+                                try {
+                                    readItem.sim.callback(readItem.sim, val as any);
+                                } catch (err) {
+                                    // not our problem
+                                }
+                            }
+                        }
+                    } else {
+                        console.warn(`No DPL SIM callback found for ${dDef.dataParserFnName}`);
+                    }
+                }
+            } else if (item.sim?.type == "read") {
+                const eventCallback = this.listeners.get(item.id);
+                if (eventCallback) {
+                    console.info(`Triggering FRONTEND for ${item.id} with value ${data}`);
+                    eventCallback(item.id, data);
+                }
+            }
+
+            // Does it have a DAL callback attached?
+            if (item.onSimReadFnName) {
+                const dalCallback = onSimReadEventCallbacks[item.onSimReadFnName]
+                if (dalCallback) {
+                    //console.info(`Calling DAL SIM callback ${item.onSimReadFnName} with value`, data);
+                    dalCallback(cbDescriptor, this.device, data);
+                } else {
+                    console.warn(`No DAL SIM callback found for ${item.onSimReadFnName}`);
+                }
             }
         }
     }

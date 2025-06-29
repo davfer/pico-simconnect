@@ -82,7 +82,7 @@ import {
   PMDG_NG3_CDU_0_DEFINITION,
   PMDG_NG3_CDU_0_ID,
   PMDG_NG3_CDU_0_NAME,
-  PMDG_NG3_Data
+  PMDG_NG3_Data, PMDG_NG3_DATA_DEFINITION, PMDG_NG3_DATA_ID, PMDG_NG3_DATA_NAME
 } from "@shared/definitions/PMDG_NG3_SDK.ts";
 
 const props = defineProps<{
@@ -968,7 +968,7 @@ const layout = [
     front: {style: "rectangle"},
     // iface: {id: 'cdu_screen', type: BoardInterfaceType.SCREEN, offset: 0} as BoardItem,
     sim: {
-      id: "cud_data_lines",
+      id: "cdu_data_lines",
       type: "read",
       name: "CduDataLines"
     } as ReadDescriptor
@@ -991,20 +991,20 @@ const layout = [
       dataParserFnName: "CduScreenParseFn"
     } as DataDescriptor
   },
-    // TODO: Reenable NG3 Data parse
-  // {
-  //   id: 'PMDG_NG3_Data',
-  //   sim: {
-  //     id: 'PMDG_NG3_Data',
-  //     simid: simids.PMDG_DATA,
-  //     type: "data",
-  //     size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 1), 0),
-  //     dataName: PMDG_NG3_DATA_NAME,
-  //     dataId: PMDG_NG3_DATA_ID,
-  //     dataDefinition: PMDG_NG3_DATA_DEFINITION,
-  //     dataParserFnName: "PmdgNg3DataParseFn"
-  //   } as DataDescriptor
-  // }
+  {
+    id: 'PMDG_NG3_Data',
+    sim: {
+      id: 'PMDG_NG3_Data',
+      simid: simids.PMDG_DATA,
+      type: "data",
+      size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 1), 0),
+      dataName: PMDG_NG3_DATA_NAME,
+      dataId: PMDG_NG3_DATA_ID,
+      dataDefinition: PMDG_NG3_DATA_DEFINITION,
+      dataParserFnName: "PmdgNg3DataParseFn",
+      dataUpdateOnChange: false,
+    } as DataDescriptor
+  }
 ] as BoardItem[]
 
 const screenGrid = computed<Pixel[][]>(() => {
@@ -1066,6 +1066,11 @@ const register = async () => {
   });
 
   props.board.onChange(boardid, (itemId: string, value: any) => {
+    // for arrays, take 1st
+    if (["PMDG_NG3_Data", "CDU_SCREEN"].indexOf(item.id) < 0 && value.hasOwnProperty("length")) {
+      items.set(itemId, value[0] ? 1 : 0)
+      return
+    }
     items.set(itemId, value)
   });
 

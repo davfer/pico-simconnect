@@ -52,97 +52,14 @@ export class Sim {
                 // not our problem
             }
         });
-        // this.sim.on('simObjectData', (recvSimObjectData:RecvSimObjectData) => {
-        //     console.log("Received sim object data:", recvSimObjectData);
-        //     const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID);
-        //     if (!def) {
-        //         console.debug(`Received data with untracked definition: ${recvSimObjectData.requestID}`);
-        //         return;
-        //     }
-        //     if (def.type != 'data') {
-        //         console.warn(`Received data for non-data definition: ${def.id}`);
-        //         return;
-        //     }
-        //
-        //     function parseDataDefinition(def: DataDefinition, recvSimObjectData: RecvSimObjectData) : any {
-        //         switch (def.dataType) {
-        //             case SimConnectDataType.STRING8:
-        //                 return recvSimObjectData.data.readString8()
-        //             case SimConnectDataType.STRING32:
-        //                 return recvSimObjectData.data.readString32()
-        //             case SimConnectDataType.INT32:
-        //                 return recvSimObjectData.data.readInt32()
-        //             case SimConnectDataType.FLOAT32:
-        //                 return recvSimObjectData.data.readFloat32()
-        //             default:
-        //                 console.warn(`Unsupported data type: ${def.dataType}`);
-        //                 return null;
-        //         }
-        //     }
-        //
-        //     const result = new Map<string, any>()
-        //     const dDef = def as DataDefinitionDescriptor;
-        //     for (const data of dDef.definitions) {
-        //         const size = data.size || 1;
-        //         let values = [];
-        //         for (let i = 0; i < size; i++) {
-        //             const value = parseDataDefinition(data, recvSimObjectData);
-        //             if (value !== null) {
-        //                 values.push(value);
-        //             }
-        //         }
-        //         result.set(data.name, values.length === 1 ? values[0] : values)
-        //     }
-        //
-        //     try {
-        //         if (dDef.callback) {
-        //             dDef.callback(dDef, result)
-        //         }
-        //     } catch (error) {
-        //         // not our problem
-        //     }
-        //
-        //     // find "read" definitions subscribed to the same simid
-        //     const readDefs : ReadDescriptor[] = this.definitions.filter(d => d.type === 'read' && d.simid === def.simid) as ReadDescriptor[]
-        //     for (const readDef of readDefs) {
-        //         if (readDef.callback) {
-        //             try {
-        //                 readDef.callback(readDef, result.get(readDef.name));
-        //             } catch (error) {
-        //                 // not our problem
-        //             }
-        //         } else {
-        //             console.warn(`No callback defined for read definition: ${readDef.id}`);
-        //         }
-        //     }
-        // })
+
         this.sim.on('clientData', recvSimObjectData => {
             const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID && d.type === 'data') as DataDescriptor
-            console.log(`Received client data for ${def?.id}:`, recvSimObjectData.requestID, recvSimObjectData.defineCount, recvSimObjectData.entryNumber);
+            //console.log(`Received client data for ${def?.id}:`, recvSimObjectData.requestID, recvSimObjectData.defineCount, recvSimObjectData.entryNumber);
             if (!def || !def.callback) {
                 console.error(`Received data with untracked ID: ${recvSimObjectData.requestID}`);
                 return;
             }
-
-
-            // const CDU_COLUMNS = 24;
-            // const CDU_ROWS = 14;
-            // const screenText: string[] = Array(CDU_ROWS).fill('');
-            //
-            // for (let col = 0; col < CDU_COLUMNS; col++) {
-            //     for (let row = 0; row < CDU_ROWS; row++) {
-            //         const offset = (row * CDU_COLUMNS + col) * 3; // Each character is 3 bytes: char, color, flags
-            //         // I tried readString(1) but that only works with zero-terminated strings, which doesn't seem to be used here
-            //         const symbol = recvSimObjectData.data.readBytes(1).toString("utf-8") // I tried readString(1) but that only works with zero-terminated strings, which doesn't seem to be used here
-            //         const color = recvSimObjectData.data.readBytes(1)[0]
-            //         const flags = recvSimObjectData.data.readBytes(1)[0]
-            //
-            //         screenText[row] += symbol;
-            //     }
-            // }
-            // const cduPowered = recvSimObjectData.data.readBytes(1)[0] === 1
-            // console.log("So...", screenText, cduPowered);
-            //
 
             try {
                 def.callback(def, recvSimObjectData.data);
@@ -231,33 +148,6 @@ export class Sim {
             throw new Error('SimConnect not connected');
         }
 
-        /*if (descriptor.type === 'event') {
-            // this.sim.addClientEventToNotificationGroup(
-            //     SimConnectConstants.OBJECT_ID_USER,
-            //     descriptor.hwid,
-            //     descriptor.simid
-            // );
-            // this.sim.addToDataDefinition(
-            //
-            // )
-        }else */
-        /*if (descriptor.type === 'data') { // data definition
-            const ddDescriptor = descriptor as DataDefinitionDescriptor;
-            for (const def of ddDescriptor.definitions) {
-                this.sim.addToDataDefinition(
-                    ddDescriptor.defid,
-                    def.name,
-                    def.unit,
-                    def.dataType
-                );
-            }
-            this.sim.requestDataOnSimObject(
-                ddDescriptor.simid,
-                ddDescriptor.defid,
-                SimConnectConstants.OBJECT_ID_USER,
-                SimConnectPeriod.SIM_FRAME
-            );
-        } else */
         console.log(`Subscribing to definition: ${descriptor.id}`, descriptor);
         if (descriptor.type === 'data') {
             const dDescriptor = descriptor as DataDescriptor;
@@ -267,7 +157,7 @@ export class Sim {
                 dDescriptor.dataId,
                 dDescriptor.simid,
                 dDescriptor.dataDefinition,
-                ClientDataPeriod.ON_SET,
+                (dDescriptor.dataUpdateOnChange === true || dDescriptor.dataUpdateOnChange === null) ? ClientDataPeriod.ON_SET : ClientDataPeriod.SECOND,
                 ClientDataRequestFlag.CLIENT_DATA_REQUEST_FLAG_CHANGED
             );
         } else if (descriptor.type === 'write') {
