@@ -21,26 +21,51 @@ export enum DataDefinitionType {
     BOOLEAN, // SimConnectDataType.STRING8,
     CHAR, // SimConnectDataType.STRING8,
     FLOAT, //SimConnectDataType.FLOAT32,
+    DOUBLE, //SimConnectDataType.FLOAT32,
     UINT, //SimConnectDataType.UINT32,
     SHORT,    //SimConnectDataType.INT32,
     USHORT,    //SimConnectDataType.UINT32,
+    CUSTOM,
 }
 
-export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
-    switch (type) {
+export function CalculateBytes(d : DataDefinitionType) : number {
+    switch (d) {
         case DataDefinitionType.BOOLEAN:
-        case DataDefinitionType.CHAR:
-            return 5; // SimConnectDataType.STRING8
-        case DataDefinitionType.FLOAT:
-            return 3; // SimConnectDataType.FLOAT32
+            return 1
         case DataDefinitionType.UINT:
-            return 1; // SimConnectDataType.INT32
+            return 4
         case DataDefinitionType.SHORT:
-            return 1; // SimConnectDataType.INT32
-        default:
-            throw new Error(`Unsupported data definition type: ${type}`);
+            return 2
+        case DataDefinitionType.CHAR:
+            return 1
+        case DataDefinitionType.FLOAT:
+            return 4
+        case DataDefinitionType.DOUBLE:
+            return 8
+        case DataDefinitionType.USHORT:
+            return 2
+        case DataDefinitionType.WTFFLOAT:
+            return 6
+        case DataDefinitionType.CUSTOM:
+            return 1
     }
 }
+
+// export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
+//     switch (type) {
+//         case DataDefinitionType.BOOLEAN:
+//         case DataDefinitionType.CHAR:
+//             return 5; // SimConnectDataType.STRING8
+//         case DataDefinitionType.FLOAT:
+//             return 3; // SimConnectDataType.FLOAT32
+//         case DataDefinitionType.UINT:
+//             return 1; // SimConnectDataType.INT32
+//         case DataDefinitionType.SHORT:
+//             return 1; // SimConnectDataType.INT32
+//         default:
+//             throw new Error(`Unsupported data definition type: ${type}`);
+//     }
+// }
 
 export interface DataDefinition<T = unknown> {
     name: string // Name of the data definition

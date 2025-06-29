@@ -117,7 +117,7 @@ export default class Device {
                 //console.trace('Response reading pins:', response);
                 await this.parsePollingResponse(response)
             } catch (error) {
-                console.error('Error during polling:', error);
+                // console.error('Error during polling:', error); // TODO
             }
         }, this.pollingMs);
     }

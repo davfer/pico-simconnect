@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 
 // SimConnect data area definitions
-import {DataDefinition, DataDefinitionType} from "@shared/sim.types.ts";
+import {CalculateBytes, DataDefinition, DataDefinitionType} from "@shared/sim.types.ts";
 
 export const PMDG_NG3_DATA_NAME = "PMDG_NG3_Data"
 export const PMDG_NG3_DATA_ID = 0x4E473331
@@ -70,14 +70,14 @@ export function IRSModeParser(data: Buffer): IRSMode {
 
 export const PMDG_NG3_Data: DataDefinition[] = [
     // Aft overhead
-    {name: "IRS_DisplaySelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position", parser: PosParser},
+    {name: "IRS_DisplaySelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
     {name: "IRS_SysDisplay_R", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "IRS_annunGPS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "IRS_annunALIGN", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "IRS_annunON_DC", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "IRS_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "IRS_annunDC_FAIL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
-    {name: "IRS_ModeSelector", dataType: DataDefinitionType.CHAR, size: 2, unit: "position", parser: IRSModeParser},
+    {name: "IRS_ModeSelector", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"},
     {name: "WARN_annunPSEU", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "COMM_ServiceInterphoneSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "LTS_DomeWhiteSw", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
@@ -114,7 +114,7 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "NAVDIS_SourceSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
     {name: "NAVDIS_ControlPaneSelector", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"},
     // Fuel
-    {name: "FUEL_FuelTempNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Celsius"},
+    {name: "FUEL_FuelTempNeedle", dataType: DataDefinitionType.CUSTOM, size: 6, unit: "Celsius"},
     {name: "FUEL_CrossFeedSw", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "FUEL_PumpFwdSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "FUEL_PumpAftSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
@@ -154,7 +154,7 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "ELEC_annunGEN_BUS_OFF", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "ELEC_annunAPU_GEN_OFF_BUS", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     // APU
-    {name: "APU_EGTNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Celsius"},
+    {name: "APU_EGTNeedle", dataType: DataDefinitionType.CUSTOM, size: 5, unit: "Celsius"},
     {name: "APU_annunMAINT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "APU_annunLOW_OIL_PRESSURE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "APU_annunFAULT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
@@ -214,10 +214,10 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "AIR_annunPackTripOff", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 packs
     {name: "AIR_annunWingBodyOverheat", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 zones
     {name: "AIR_annunBleedTripOff", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"}, // 2 bleed air switches
-    {name: "AIR_FltAltWindow", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"}, // WARNING obsolete - use AIR_DisplayFltAlt instead
-    {name: "AIR_LandAltWindow", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"}, // WARNING obsolete - use AIR_DisplayLandAlt instead
-    {name: "AIR_OutflowValveSwitch", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=CLOSE  1=NEUTRAL  2=OPEN
-    {name: "AIR_PressurizationModeSelector", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=A
+    {name: "AIR_FltAltWindow", dataType: DataDefinitionType.CUSTOM, size: 5, unit: "feet"}, // WARNING obsolete - use AIR_DisplayFltAlt instead
+    {name: "AIR_LandAltWindow", dataType: DataDefinitionType.CUSTOM, size: 6, unit: "feet"}, // WARNING obsolete - use AIR_DisplayLandAlt instead
+    {name: "AIR_OutflowValveSwitch", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=CLOSE  1=NEUTRAL  2=OPEN (LittleEndian)
+    {name: "AIR_PressurizationModeSelector", dataType: DataDefinitionType.UINT, size: 1, unit: "position"}, // 0=AUTO (LittleEndian)
     // Bottom overhead
     {name: "LTS_LandingLtRetractableSw", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: RETRACT  1: EXTEND  2: ON
     {name: "LTS_LandingLtFixedSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
@@ -253,14 +253,14 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "EFIS_VORADFSel2", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: VOR  1: OFF  2: ADF
     {name: "EFIS_ModeSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: APP  1: VOR  2: MAP  3: PLAn
     {name: "EFIS_RangeSel", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // 0: 5 ... 7: 640
-    // Mode control panel
-    {name: "MCP_Course", dataType: DataDefinitionType.UINT, size: 2, unit: "degrees"},
-    {name: "MCP_IASMach", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Mach"}, // Mach if < 10.0
+    // // Mode control panel
+    {name: "MCP_Course", dataType: DataDefinitionType.USHORT, size: 2, unit: "degrees"},
+    {name: "MCP_IASMach", dataType: DataDefinitionType.CUSTOM, size: 5, unit: "Mach"}, // Mach if < 10.0
     {name: "MCP_IASBlank", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "MCP_IASOverspeedFlash", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "MCP_IASUnderspeedFlash", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
-    {name: "MCP_Heading", dataType: DataDefinitionType.UINT, size: 1, unit: "degrees"},
-    {name: "MCP_Altitude", dataType: DataDefinitionType.UINT, size: 1, unit: "feet"},
+    {name: "MCP_Heading", dataType: DataDefinitionType.USHORT, size: 1, unit: "degrees"},
+    {name: "MCP_Altitude", dataType: DataDefinitionType.USHORT, size: 1, unit: "feet"},
     {name: "MCP_VertSpeed", dataType: DataDefinitionType.SHORT, size: 1, unit: "feet/min"},
     {name: "MCP_VertSpeedBlank", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "MCP_FDSw", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
@@ -307,11 +307,11 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "MAIN_annunAUTO_BRAKE_DISARM", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "MAIN_annunLE_FLAPS_TRANSIT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "MAIN_annunLE_FLAPS_EXT", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
-    {name: "MAIN_TEFlapsNeedle", dataType: DataDefinitionType.FLOAT, size: 2, unit: "Value"}, // Value
+    {name: "MAIN_TEFlapsNeedle", dataType: DataDefinitionType.CUSTOM, size: 9, unit: "Value"}, // Value
     {name: "MAIN_annunGEAR_transit", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"},
     {name: "MAIN_annunGEAR_locked", dataType: DataDefinitionType.BOOLEAN, size: 3, unit: "bool"},
     {name: "MAIN_GearLever", dataType: DataDefinitionType.CHAR, size: 1, unit: "position"}, // 0: UP  1: OFF  2: DOWN
-    {name: "MAIN_BrakePressNeedle", dataType: DataDefinitionType.FLOAT, size: 1, unit: "Value"}, // Value
+    {name: "MAIN_BrakePressNeedle", dataType: DataDefinitionType.CUSTOM, size: 5, unit: "Value"}, // Value
     {name: "HGS_annun_AIII", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "HGS_annun_NO_AIII", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "HGS_annun_FLARE", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
@@ -344,7 +344,7 @@ export const PMDG_NG3_Data: DataDefinition[] = [
     {name: "CDU_annunFAIL", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "CDU_annunMSG", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
     {name: "CDU_annunOFST", dataType: DataDefinitionType.BOOLEAN, size: 2, unit: "bool"},
-    {name: "CDU_BrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position", parser: PosParser}, // Position 0...127
+    {name: "CDU_BrtKnob", dataType: DataDefinitionType.CHAR, size: 2, unit: "position"}, // Position 0...127
     {name: "TRIM_StabTrimMainElecSw_NORMAL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "TRIM_StabTrimAutoPilotSw_NORMAL", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
     {name: "PED_annunParkingBrake", dataType: DataDefinitionType.BOOLEAN, size: 1, unit: "bool"},
@@ -385,20 +385,12 @@ export const PMDG_NG3_Data: DataDefinition[] = [
 
 export function PMDG_NG3_Data_Size() {
     return PMDG_NG3_Data.reduce((acc, def) => {
-        let size = 1
-        switch (def.dataType) {
-            case DataDefinitionType.UINT:
-                size = 4
-                break
-            case DataDefinitionType.SHORT:
-                size = 2
-                break
-            case DataDefinitionType.FLOAT:
-                size = 4
-                break
-        }
-        return acc + ((def.size || 1) * size)
+        return acc + ((def.size || 1) * CalculateBytes(def.dataType))
     }, 0);
+}
+
+export function PMDG_CDU_Data_Size() {
+    return CDU_COLUMNS * CDU_ROWS * (1 + 1 + 1) + 1;
 }
 
 // struct PMDG_NG3_Data

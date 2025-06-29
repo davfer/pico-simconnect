@@ -10,7 +10,7 @@ export default class Board {
 
     constructor(private sim: ISim, vendorId: number, productId: number, private items: BoardItem[]) {
         const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
-        this.device = new Device(vendorId, productId, interfaces, 100);
+        this.device = new Device(vendorId, productId, interfaces, 10000);
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
@@ -78,7 +78,7 @@ export default class Board {
             } else if (item.sim?.type == "read") {
                 const eventCallback = this.listeners.get(item.id);
                 if (eventCallback) {
-                    console.info(`Triggering FRONTEND for ${item.id} with value ${data}`);
+                    // console.info(`Triggering FRONTEND for ${item.id} with value ${data}`);
                     eventCallback(item.id, data);
                 }
             }

@@ -2,7 +2,7 @@ import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapter
 import {DataDefinitionType, Descriptor} from "@shared/sim.types";
 import Device from "@electron/usb/device";
 import {extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
-import {PMDG_NG3_Data, PMDG_NG3_Data_Size} from "@shared/definitions/PMDG_NG3_SDK.ts";
+import {PMDG_NG3_Data} from "@shared/definitions/PMDG_NG3_SDK.ts";
 import log from "electron-log/main";
 import {RawBuffer} from "node-simconnect";
 
@@ -50,7 +50,7 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
         }
     },
     PmdgNg3DataParseFn: (data: RawBuffer) => {
-        console.log("PmdgNg3DataParseFn", data.remaining(), PMDG_NG3_Data_Size());
+        // console.log("PmdgNg3DataParseFn", data.remaining(), PMDG_NG3_Data_Size());
 
         let result: Record<string, any> = {};
         for (const i in PMDG_NG3_Data) {
@@ -58,10 +58,15 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
             const size = def.size || 1;
             let values = [];
 
+
+            if (def.dataType == DataDefinitionType.CUSTOM) {
+                result[def.name] = data.readBytes(def.size);
+                continue
+            }
+
             for (let j = 0; j < size; j++) {
                 if (data.remaining() <= 0) {
-                    // TODO: check parsing
-                    //console.error(`PmdgNg3DataParseFn: Exceeds data length ${def.name}`);
+                    console.error(`PmdgNg3DataParseFn: Exceeds data length ${def.name}`);
                     break;
                 }
 
@@ -75,26 +80,23 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
                     case DataDefinitionType.FLOAT:
                         values.push(data.readFloat32())
                         break
+                    case DataDefinitionType.DOUBLE:
+                        values.push(data.readFloat64())
+                        break
                     case DataDefinitionType.SHORT:
                         values.push(data.readInt16())
                         break
                     case DataDefinitionType.USHORT:
-                        values.push(data.readInt16()) // TODO
+                        values.push(data.readInt16())
                         break
                     case DataDefinitionType.UINT:
                         values.push(data.readInt32())
                         break
-                    // case DataDefinitionType.INT:
-                    //     values.push(data.readInt32())
-                    //     break
                 }
             }
             result[def.name] = values.length === 1 ? values[0] : values;
         }
-
-        //console.log("PmdgNg3DataParseFn RES", result);
-        //console.log("PmdgNg3DataParseFn REMAINING", data.remaining(), data.readBytes(data.remaining()));
-
+        //console.log(JSON.stringify(result));
 
         return result;
     }

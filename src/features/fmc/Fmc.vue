@@ -78,11 +78,11 @@ import {
   EVT_CDU_L_X,
   EVT_CDU_L_Y,
   EVT_CDU_L_Z,
-  MOUSE_FLAG_LEFTSINGLE,
+  MOUSE_FLAG_LEFTSINGLE, PMDG_CDU_Data_Size,
   PMDG_NG3_CDU_0_DEFINITION,
   PMDG_NG3_CDU_0_ID,
   PMDG_NG3_CDU_0_NAME,
-  PMDG_NG3_Data, PMDG_NG3_DATA_DEFINITION, PMDG_NG3_DATA_ID, PMDG_NG3_DATA_NAME
+  PMDG_NG3_Data, PMDG_NG3_DATA_DEFINITION, PMDG_NG3_DATA_ID, PMDG_NG3_DATA_NAME, PMDG_NG3_Data_Size
 } from "@shared/definitions/PMDG_NG3_SDK.ts";
 
 const props = defineProps<{
@@ -980,11 +980,7 @@ const layout = [
       id: "cdu_SCREEN",
       simid: simids.CDU_SCREEN,
       type: "data",
-      size: (() => {
-        const CDU_COLUMNS = 24;
-        const CDU_ROWS = 14;
-        return CDU_COLUMNS * CDU_ROWS * (1 + 1 + 1) + 1;
-      })(),
+      size: PMDG_CDU_Data_Size(),
       dataName: PMDG_NG3_CDU_0_NAME,
       dataId: PMDG_NG3_CDU_0_ID,
       dataDefinition: PMDG_NG3_CDU_0_DEFINITION,
@@ -997,7 +993,7 @@ const layout = [
       id: 'PMDG_NG3_Data',
       simid: simids.PMDG_DATA,
       type: "data",
-      size: PMDG_NG3_Data.reduce((acc, item) => acc + (item.size || 1), 0),
+      size: PMDG_NG3_Data_Size(),
       dataName: PMDG_NG3_DATA_NAME,
       dataId: PMDG_NG3_DATA_ID,
       dataDefinition: PMDG_NG3_DATA_DEFINITION,
@@ -1058,7 +1054,7 @@ const register = async () => {
   }
 
   layout.forEach((item) => {
-    if (["PMDG_NG3_Data", "CDU_SCREEN"].indexOf(item.id) >= 0) {
+    if (["PMDG_NG3_Data", "CDU_SCREEN", "CDU_SCREEN_CONTENT"].indexOf(item.id) >= 0) {
       console.log(`Skipping item ${item.id} as it is not a button or LED`);
       return;
     }
@@ -1066,8 +1062,7 @@ const register = async () => {
   });
 
   props.board.onChange(boardid, (itemId: string, value: any) => {
-    // for arrays, take 1st
-    if (["PMDG_NG3_Data", "CDU_SCREEN"].indexOf(item.id) < 0 && value.hasOwnProperty("length")) {
+    if (["PMDG_NG3_Data", "CDU_SCREEN", "CDU_SCREEN_CONTENT"].indexOf(itemId) < 0 && value.hasOwnProperty("length")) {
       items.set(itemId, value[0] ? 1 : 0)
       return
     }
