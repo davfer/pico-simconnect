@@ -59,7 +59,6 @@ function createWindow() {
     });
     win.on('close', async () => {
         console.log('Window is closing, unloading board...')
-        // @ts-expect-error board is used before assignment, this was in original code
         await board.close()
         app.exit(0)
     })

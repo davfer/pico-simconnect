@@ -1,13 +1,13 @@
 import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapters/ipc.types";
 import {DataDefinitionType, Descriptor} from "@shared/sim.types";
 import Device from "@electron/usb/device";
-import {extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
+import {CduCell, extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
 import {PMDG_NG3_Data} from "@shared/definitions/PMDG_NG3_SDK.ts";
 import log from "electron-log/main";
 import {RawBuffer} from "node-simconnect";
 
 export interface ParsedCDUData {
-    CduDataLines: string[]
+    CduDataLines: CduCell[][]
     CduPowered: boolean
 }
 
@@ -19,9 +19,9 @@ export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
             // Will send 2 commands of 12 cells each
             let bytesToSend = []
             for (let j = 0; j < value.CduDataLines[y].length; j++) {
-                bytesToSend.push(value.CduDataLines[y].charCodeAt(j))
-                bytesToSend.push(0) // padding byte
-                bytesToSend.push(0) // padding byte
+                bytesToSend.push(value.CduDataLines[y][j].symbol)
+                bytesToSend.push(value.CduDataLines[y][j].color)
+                bytesToSend.push(value.CduDataLines[y][j].symbol)
             }
 
             // TODO: Reenable
@@ -39,7 +39,7 @@ export const onDeviceReadEventCallbacks: Record<string, OnDeviceReadEventCallbac
     // }
 }
 
-export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> = {
+export const onDataParserEventCallbacks: Record<string, (data: RawBuffer) => any> = {
     CduScreenParseFn: (data: RawBuffer) : ParsedCDUData => {
         //console.log("CduScreenParseFn", data);
 
@@ -60,7 +60,7 @@ export const onDataParserEventCallbacks: Record<string, (data: Buffer) => any> =
 
 
             if (def.dataType == DataDefinitionType.CUSTOM) {
-                result[def.name] = data.readBytes(def.size);
+                result[def.name] = data.readBytes(def.size || 1);
                 continue
             }
 
