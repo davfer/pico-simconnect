@@ -17,18 +17,36 @@ export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
 
         for (let y = 0; y < value.CduDataLines.length; y++) {
             // Will send 2 commands of 12 cells each
-            let bytesToSend = []
+            let bytesToSend : number[] = []
             for (let j = 0; j < value.CduDataLines[y].length; j++) {
-                bytesToSend.push(value.CduDataLines[y][j].symbol)
-                bytesToSend.push(value.CduDataLines[y][j].color)
-                bytesToSend.push(value.CduDataLines[y][j].symbol)
+                const cduCell = value.CduDataLines[y][j]
+                switch (cduCell.symbolNum) {
+                    case 0xEA: // Placeholder
+                        cduCell.symbolNum = 0x7F
+                        break
+                    case 0xA1: // Left Arrow
+                        cduCell.symbolNum = 0x81
+                        break
+                    case 0xA2: // Right Arrow
+                        cduCell.symbolNum = 0x80
+                        break
+                    case 0xA3: // Up Arrow
+                        cduCell.symbolNum = 0x82
+                        break
+                    case 0xA4: // Down Arrow
+                        cduCell.symbolNum = 0x83
+                        break
+                }
+
+                bytesToSend.push(cduCell.symbolNum)
+                bytesToSend.push(cduCell.color)
+                bytesToSend.push(cduCell.flags)
             }
 
-            // TODO: Reenable
             // SET_PIXEL [x, y, count, {char, color, type}...]
-            // await device.sendCmd(0x01, [0, y, 12, ...bytesToSend.slice(0, 36)]);
+            await device.sendCmd(0x01, [0, y, 12, ...bytesToSend.slice(0, 36)]);
             // SET_PIXEL [x, y, count, {char, color, type}...]
-            // await device.sendCmd(0x01, [12, y, 12, ...bytesToSend.slice(36)]);
+            await device.sendCmd(0x01, [12, y, 12, ...bytesToSend.slice(36)]);
         }
     }
 };
