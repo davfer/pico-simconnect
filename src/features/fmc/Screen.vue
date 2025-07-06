@@ -41,7 +41,8 @@ const classNames = computed(() => {
     <div class="grid grid-cols-24 grid-rows-14 gap-1">
       <template v-for="(row, rowIndex) in props.grid" :key="rowIndex">
         <div v-for="(pixel, colIndex) in row" :key="rowIndex.toString() + colIndex.toString()" :class="classNames(pixel)">
-          {{ pixel.symbol }}
+          <span v-if="pixel.symbolNum !== 234">{{ pixel.symbol }}</span>
+          <span v-else class="cell--placeholder">&nbsp;</span>
         </div>
       </template>
     </div>
@@ -76,6 +77,9 @@ const classNames = computed(() => {
 }
 .cell--color-red {
   color: red;
+}
+.cell--placeholder {
+  border: 1px solid #FFF;
 }
 
 </style>

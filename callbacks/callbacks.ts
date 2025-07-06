@@ -44,6 +44,8 @@ export const onDataParserEventCallbacks: Record<string, (data: RawBuffer) => any
         //console.log("CduScreenParseFn", data);
 
         const cduData = extractCduScreenState(data);
+        console.log("CduScreenParseFn", cduData);
+
         return {
             CduDataLines: cduData.lines,
             CduPowered: cduData.powered

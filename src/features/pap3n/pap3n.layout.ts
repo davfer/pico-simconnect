@@ -1,0 +1,13 @@
+export const SPD_DEC = 20;
+export const SPD_INC = 21;
+export const HDG_DEC = 22;
+export const HDG_INC = 23;
+export const ALT_DEC = 24;
+export const ALT_INC = 25;
+export const VS_DEC = 39;
+export const VS_INC = 40;
+export const CRSL_DEC = 18;
+export const CRSL_INC = 19;
+export const CRSR_DEC = 26;
+export const CRSR_INC = 27;
+export const BUTTONS_REPORT = 1;
