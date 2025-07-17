@@ -64,6 +64,9 @@ export class BackBoard {
 
             this.boards.set(id, board);
             console.info(`BackBoard: Board '${id}' initialized and listening for changes.`);
+
+            this.mainWindow.webContents.send('board-registered', {id})
+
             return {success: true};
         });
 
@@ -75,8 +78,8 @@ export class BackBoard {
                 return {success: false, error: `Board with id '${id}' not found. (${this.boards.size})`};
             }
             console.info(`BackBoard: Triggering item '${itemId}' on board '${id}' with value '${value}'.`);
-            await board.trigger(itemId, value);
-            return {success: true};
+            await board.trigger(itemId, value)
+            return {success: true}
         });
 
         this.ipc.handle('unregister-board', async (_: IpcMainInvokeEvent, {id}: { id: string }) => {
@@ -90,6 +93,7 @@ export class BackBoard {
                 await board.close();
                 this.boards.delete(id);
                 console.info(`BackBoard: Board '${id}' unregistered successfully.`);
+                this.mainWindow.webContents.send('board-unregistered', {id});
                 return {success: true};
             } catch (err) {
                 console.error(`BackBoard: Failed to unregister board '${id}':`, err);

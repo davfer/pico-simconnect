@@ -9,8 +9,8 @@ const props = defineProps<{
 
 <template>
   <div :class="[props.type, props.color ? `led--${props.color}${props.value ? '-enabled' : ''}` : '']" class="led">
-    <span v-if="props.value" class="text-white">{{text ? text : '●'}}</span>
-    <span v-else class="text-gray-500">{{text ? text : '○'}}</span>
+    <span v-if="props.value" class="text-white">{{ text ? text : '●' }}</span>
+    <span v-else class="text-gray-500">{{ text ? text : '○' }}</span>
   </div>
 </template>
 
@@ -48,6 +48,7 @@ const props = defineProps<{
 .led--red {
   background: #3b0000;
 }
+
 .led--red-enabled {
   background: red;
 }
@@ -55,6 +56,7 @@ const props = defineProps<{
 .led--green {
   background: #002c00;
 }
+
 .led--green-enabled {
   background: green;
 }
@@ -62,6 +64,7 @@ const props = defineProps<{
 .led--white {
   background: #3a3a3a;
 }
+
 .led--white-enabled {
   background: white;
 }
@@ -69,6 +72,7 @@ const props = defineProps<{
 .led--yellow {
   background: #2c2500;
 }
+
 .led--yellow-enabled {
   background: yellow;
 }

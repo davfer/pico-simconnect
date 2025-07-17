@@ -72,7 +72,11 @@ import {
     PMDG_CDU_Data_Size,
     PMDG_NG3_CDU_0_DEFINITION,
     PMDG_NG3_CDU_0_ID,
-    PMDG_NG3_CDU_0_NAME, PMDG_NG3_DATA_DEFINITION, PMDG_NG3_DATA_ID, PMDG_NG3_DATA_NAME,
+    PMDG_NG3_CDU_0_NAME,
+    PMDG_NG3_Data,
+    PMDG_NG3_DATA_DEFINITION,
+    PMDG_NG3_DATA_ID,
+    PMDG_NG3_DATA_NAME,
     PMDG_NG3_Data_Size
 } from "@shared/definitions/PMDG_NG3_SDK.ts";
 import {DataDescriptor, ReadDescriptor, WriteDescriptor} from "@shared/sim.types.ts";
@@ -152,7 +156,7 @@ export enum FMC_SIMIDS {
 }
 
 
-export const FMC_LAYOUT = [
+export const FMC_LAYOUT: BoardItem[] = [
     {
         id: "CDU_L1",
         front: {style: "rectangle-sm", value: "-"},
@@ -982,10 +986,10 @@ export const FMC_LAYOUT = [
             simid: FMC_SIMIDS.PMDG_DATA,
             type: "data",
             size: PMDG_NG3_Data_Size(),
+            dataLayout: PMDG_NG3_Data,
             dataName: PMDG_NG3_DATA_NAME,
             dataId: PMDG_NG3_DATA_ID,
             dataDefinition: PMDG_NG3_DATA_DEFINITION,
-            dataParserFnName: "PmdgNg3DataParseFn",
             dataUpdateOnChange: false,
         } as DataDescriptor
     }
