@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import Screen from "./Screen.vue";
-import Button from "./Button.vue";
-import Led from "./Led.vue";
+import Screen from "@src/components/Screen.vue";
+import Button from "@src/components/Button.vue";
+import Led from "@src/components/Led.vue";
 import {CduCell, CduCellColor} from "./fmc.types.ts";
 import {computed, onUnmounted, reactive, ref} from "vue";
 import {BoardItem} from "@shared/board.types.ts";
@@ -26,6 +26,7 @@ const screenGrid = computed<CduCell[][]>(() => {
     const initCell: CduCell = {
       symbol: ".",
       color: CduCellColor.WHITE,
+      symbolNum: " ".charCodeAt(0),
       flags: 0
     };
     return Array.from({length: rows}, () => Array.from({length: columns}, () => initCell)) as CduCell[][];
@@ -34,6 +35,7 @@ const screenGrid = computed<CduCell[][]>(() => {
   const emptyCell: CduCell = {
     symbol: " ",
     color: CduCellColor.WHITE,
+    symbolNum: " ".charCodeAt(0),
     flags: 0
   };
   let grid = Array.from({length: rows}, () => Array.from({length: columns}, () => emptyCell)) as CduCell[][];
@@ -108,7 +110,7 @@ const status = ref("Standby -- press Connect");
 
 <template>
   <div>
-    <CommandBar scope="FMC Board" :connected="connected" :status="status" @connect="register" @disconnect="unregister"/>
+    <CommandBar :connected="connected" :status="status" scope="FMC Board" @connect="register" @disconnect="unregister"/>
   </div>
   <div class="bg-gray-700 text-white p-4 rounded-lg shadow-lg">
     <div class="grid grid-cols-[64px_auto_64px] gap-0 grid-rows-1">
@@ -130,8 +132,8 @@ const status = ref("Standby -- press Connect");
     </div>
     <div class="mt-4 grid grid-cols-[32px_auto_32px] gap-6">
       <div class="flex flex-col justify-center">
-        <Led type="vrectangle" color="white" text="CALL" :value="items.get(layout[70].id) === 1"/>
-        <Led type="vrectangle" color="red" text="FAIL" :value="items.get(layout[71].id) === 1"/>
+        <Led :value="items.get(layout[70].id) === 1" color="white" text="CALL" type="vrectangle"/>
+        <Led :value="items.get(layout[71].id) === 1" color="red" text="FAIL" type="vrectangle"/>
       </div>
       <div class="grid grid-cols-8 gap-6">
         <div class="col-span-full grid grid-cols-6 gap-5">
@@ -172,8 +174,8 @@ const status = ref("Standby -- press Connect");
         </div>
       </div>
       <div class="flex flex-col justify-center">
-        <Led type="vrectangle" color="yellow" text="MSG" :value="items.get(layout[72].id) === 1"/>
-        <Led type="vrectangle" color="yellow" text="OFST" :value="items.get(layout[73].id) === 1"/>
+        <Led :value="items.get(layout[72].id) === 1" color="yellow" text="MSG" type="vrectangle"/>
+        <Led :value="items.get(layout[73].id) === 1" color="yellow" text="OFST" type="vrectangle"/>
       </div>
     </div>
   </div>

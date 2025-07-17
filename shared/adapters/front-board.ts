@@ -1,13 +1,34 @@
-import {BoardItem} from "@shared/board.types.ts";
-import {GenericResponse, InitBoardProps, TriggerBoardProps} from "@shared/adapters/ipc.types.ts";
+import {Board, BoardItem} from "@shared/board.types.ts";
+import {GenericResponse, TriggerBoardProps} from "@shared/adapters/ipc.types.ts";
 
 // FrontBoard
 export default class FrontBoard {
+
+    private boards = new Map<string, Board>();
+    private registerBoardCallbacks: ((board: Board) => void)[] = [];
+    private unregisterBoardCallbacks: ((board: Board) => void)[] = [];
 
     constructor(private readonly ipcRenderer: Electron.IpcRenderer) {
         console.info("FrontBoard: Initializing...");
     }
 
+    public getBoard(id: string): Board | undefined {
+        // console.info(`FrontBoard: Getting board '${id}'...`);
+        return this.boards.get(id);
+    }
+
+    public getBoards(): Map<string, Board> {
+        // console.info("FrontBoard: Getting all boards...");
+        return this.boards;
+    }
+
+    public onRegisterBoard(callback: (board: Board) => void) {
+        this.registerBoardCallbacks.push(callback)
+    }
+
+    public onUnregisterBoard(callback: (board: Board) => void) {
+        this.unregisterBoardCallbacks.push(callback)
+    }
 
     async connectToSimulator() {
         console.info("FrontBoard: connectToSimulator called.");
@@ -34,17 +55,27 @@ export default class FrontBoard {
 
     async registerBoard(id: string, vid: number, pid: number, items: BoardItem[]) {
         console.info(`FrontBoard: Registering board '${id}' (VID: ${vid}, PID: ${pid}, Items: ${items.length})`);
-        const res = await this.ipcRenderer.invoke('init-board', {
+
+        const b = {
             id: id,
             productId: pid,
             vendorId: vid,
             items: items,
-        } as InitBoardProps)
+        } as Board
+        const res = await this.ipcRenderer.invoke('init-board', b)
         console.info(`FrontBoard: Board registration response for '${id}':`, res);
         if (!res || !res.success) {
             const errorMsg = `Failed to register board '${id}': ${res?.error || 'Unknown error'}`
             console.error(`FrontBoard: ${errorMsg}`);
             throw new Error(errorMsg);
+        }
+        this.boards.set(id, b);
+        for (const callback of this.registerBoardCallbacks) {
+            try {
+                callback(b);
+            } catch (error) {
+                // not our problem
+            }
         }
         console.info(`FrontBoard: Board '${id}' registered successfully.`)
     }
@@ -56,6 +87,19 @@ export default class FrontBoard {
             const errorMsg = `Failed to unregister board '${id}': ${res?.error || 'Unknown error'}`;
             console.error(`FrontBoard: ${errorMsg}`);
             throw new Error(errorMsg);
+        }
+        const board = this.boards.get(id);
+        if (!board) {
+            console.warn(`FrontBoard: Board with id '${id}' not found. Cannot unregister.`);
+            return;
+        }
+        this.boards.delete(id);
+        for (const callback of this.unregisterBoardCallbacks) {
+            try {
+                callback(board);
+            } catch (error) {
+                // not our problem
+            }
         }
         console.info(`FrontBoard: Board '${id}' unregistered successfully.`);
     }

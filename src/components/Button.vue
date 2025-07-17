@@ -4,21 +4,22 @@ const props = defineProps<{
   type?: "square" | "circle" | "rectangle" | "rectangle-sm";
   clicked?: boolean;
   registered?: boolean | null;
-}>();
+}>()
 const emit = defineEmits<{
   (e: "click", value: string): void;
-}>();
+}>()
 const handleClick = () => {
   if (props.value) {
     emit("click", props.value);
   }
-};
+}
 </script>
 
 <template>
-  <button :class="[`btn--${props.type}`, props.clicked ? 'btn--clicked' : '', props.registered === false ? 'btn--unregistered' : '']"
-          class="btn cursor-pointer"
-          @click="handleClick">
+  <button
+      :class="[`btn--${props.type}`, props.clicked ? 'btn--clicked' : '', props.registered === false ? 'btn--unregistered' : '']"
+      class="btn cursor-pointer"
+      @click="handleClick">
     {{ props.value || " " }}
   </button>
 </template>

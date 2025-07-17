@@ -1,5 +1,3 @@
-// import {SimConnectDataType} from "node-simconnect";
-
 export type EventCallback = (descriptor: Descriptor, value: any) => void
 
 export interface Descriptor {
@@ -11,10 +9,13 @@ export interface Descriptor {
 
 export interface WriteDescriptor extends Descriptor {
     hwid: number; // eventNameID
+    values?: Record<string, number>; // Value to write
+    read?: ReadDescriptor
 }
 
 export interface ReadDescriptor extends Descriptor {
     name: string; // Name of the data definition
+    position?: number; // Position in the data buffer
 }
 
 export enum DataDefinitionType {
@@ -28,7 +29,7 @@ export enum DataDefinitionType {
     CUSTOM,
 }
 
-export function CalculateBytes(d : DataDefinitionType) : number {
+export function CalculateBytes(d: DataDefinitionType): number {
     switch (d) {
         case DataDefinitionType.BOOLEAN:
             return 1
@@ -44,28 +45,16 @@ export function CalculateBytes(d : DataDefinitionType) : number {
             return 8
         case DataDefinitionType.USHORT:
             return 2
-        case DataDefinitionType.WTFFLOAT:
-            return 6
         case DataDefinitionType.CUSTOM:
             return 1
     }
 }
 
-// export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
-//     switch (type) {
-//         case DataDefinitionType.BOOLEAN:
-//         case DataDefinitionType.CHAR:
-//             return 5; // SimConnectDataType.STRING8
-//         case DataDefinitionType.FLOAT:
-//             return 3; // SimConnectDataType.FLOAT32
-//         case DataDefinitionType.UINT:
-//             return 1; // SimConnectDataType.INT32
-//         case DataDefinitionType.SHORT:
-//             return 1; // SimConnectDataType.INT32
-//         default:
-//             throw new Error(`Unsupported data definition type: ${type}`);
-//     }
-// }
+export function CalculateSize(definitions: DataDefinition[]): number {
+    return definitions.reduce((acc, def) => {
+        return acc + ((def.size || 1) * CalculateBytes(def.dataType))
+    }, 0);
+}
 
 export interface DataDefinition<T = unknown> {
     name: string // Name of the data definition
@@ -87,4 +76,6 @@ export interface DataDescriptor extends Descriptor {
     dataDefinition: number; // Definition of the CDU data
     dataParserFnName?: string; // Optional parser for the data
     dataUpdateOnChange?: boolean
+    dataLayout?: DataDefinition[]
+    strategy: 'clientData' | 'simObjectData'
 }

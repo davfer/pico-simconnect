@@ -6,9 +6,11 @@ import {
     Protocol,
     RecvEvent,
     SimConnectConnection,
-    SimConnectConstants
+    SimConnectConstants,
+    SimConnectDataType,
+    SimConnectPeriod
 } from "node-simconnect";
-import {DataDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
+import {DataDefinitionType, DataDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
 
 const EVENT_ID_PAUSE = 1;
 
@@ -67,6 +69,21 @@ export class Sim {
                 // not our problem
             }
         });
+        this.sim.on('simObjectData', (recvSimObjectData) => {
+            const def = this.definitions.find(d => d.simid === recvSimObjectData.requestID && d.type === 'data') as DataDescriptor
+            console.log(`Received simObjectData data for ${def?.id}:`, recvSimObjectData.requestID, recvSimObjectData.defineCount, recvSimObjectData.entryNumber);
+            if (!def || !def.callback) {
+                console.error(`Received data with untracked ID: ${recvSimObjectData.requestID}`);
+                return;
+            }
+
+            try {
+                def.callback(def, recvSimObjectData.data);
+            } catch (error) {
+                // not our problem
+            }
+        })
+
         this.sim.on('exception', function (recvException) {
             console.log(recvException);
         });
@@ -151,15 +168,27 @@ export class Sim {
         console.log(`Subscribing to definition: ${descriptor.id}`, descriptor);
         if (descriptor.type === 'data') {
             const dDescriptor = descriptor as DataDescriptor;
-            this.sim.mapClientDataNameToID(dDescriptor.dataName, dDescriptor.dataId);
-            this.sim.addToClientDataDefinition(dDescriptor.dataDefinition, 0, dDescriptor.size);
-            this.sim.requestClientData(
-                dDescriptor.dataId,
-                dDescriptor.simid,
-                dDescriptor.dataDefinition,
-                (dDescriptor.dataUpdateOnChange === true || dDescriptor.dataUpdateOnChange === null) ? ClientDataPeriod.ON_SET : ClientDataPeriod.SECOND,
-                ClientDataRequestFlag.CLIENT_DATA_REQUEST_FLAG_CHANGED
-            );
+            if (dDescriptor.strategy === 'clientData') {
+                this.sim.mapClientDataNameToID(dDescriptor.dataName, dDescriptor.dataId);
+                this.sim.addToClientDataDefinition(dDescriptor.dataDefinition, 0, dDescriptor.size);
+                this.sim.requestClientData(
+                    dDescriptor.dataId,
+                    dDescriptor.simid,
+                    dDescriptor.dataDefinition,
+                    (dDescriptor.dataUpdateOnChange === true || dDescriptor.dataUpdateOnChange === null) ? ClientDataPeriod.ON_SET : ClientDataPeriod.SECOND,
+                    ClientDataRequestFlag.CLIENT_DATA_REQUEST_FLAG_CHANGED
+                );
+            } else if (dDescriptor.strategy === 'simObjectData') {
+                for (const def of dDescriptor.dataLayout || []) {
+                    this.sim.addToDataDefinition(dDescriptor.dataDefinition, def.name, def.unit, DataDefinitionToSimConnectDataType(def.dataType));
+                }
+                this.sim.requestDataOnSimObject(
+                    dDescriptor.simid,
+                    dDescriptor.dataDefinition,
+                    SimConnectConstants.OBJECT_ID_USER,
+                    SimConnectPeriod.SIM_FRAME
+                );
+            }
         } else if (descriptor.type === 'write') {
             const wDescriptor = descriptor as WriteDescriptor;
             this.sim.mapClientEventToSimEvent(
@@ -174,7 +203,21 @@ export class Sim {
         } else {
             throw new Error(`Unknown descriptor type: ${descriptor.type}`);
         }
-        //
-        // this.definitions.push(descriptor)
+    }
+}
+
+export function DataDefinitionToSimConnectDataType(type: DataDefinitionType): number {
+    switch (type) {
+        case DataDefinitionType.BOOLEAN:
+        case DataDefinitionType.CHAR:
+            return SimConnectDataType.STRING8
+        case DataDefinitionType.FLOAT:
+            return SimConnectDataType.FLOAT32
+        case DataDefinitionType.UINT:
+            return SimConnectDataType.INT32
+        case DataDefinitionType.SHORT:
+            return SimConnectDataType.INT32
+        default:
+            throw new Error(`Unsupported data definition type: ${type}`);
     }
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {CduCell, CduCellColor} from "./fmc.types.ts";
+import {CduCell, CduCellColor} from "../features/fmc/fmc.types.ts";
 import {computed} from "vue";
 
 const props = defineProps<{
@@ -40,7 +40,8 @@ const classNames = computed(() => {
   <div class="bg-gray-600 p-1">
     <div class="grid grid-cols-24 grid-rows-14 gap-1">
       <template v-for="(row, rowIndex) in props.grid" :key="rowIndex">
-        <div v-for="(pixel, colIndex) in row" :key="rowIndex.toString() + colIndex.toString()" :class="classNames(pixel)">
+        <div v-for="(pixel, colIndex) in row" :key="rowIndex.toString() + colIndex.toString()"
+             :class="classNames(pixel)">
           <span v-if="pixel.symbolNum === 0xEA" class="cell--placeholder">&nbsp;</span>
           <span v-else-if="pixel.symbolNum === 0xA1">←</span>
           <span v-else-if="pixel.symbolNum === 0xA2">→</span>
@@ -61,27 +62,35 @@ const classNames = computed(() => {
   font-size: 12px;
   text-align: center;
 }
+
 .cell--small {
   font-size: 10px;
 }
+
 .cell--unused {
   color: #555;
 }
+
 .cell--color-white {
   color: white;
 }
+
 .cell--color-magenta {
   color: magenta;
 }
+
 .cell--color-cyan {
   color: cyan;
 }
+
 .cell--color-green {
   color: green;
 }
+
 .cell--color-red {
   color: red;
 }
+
 .cell--placeholder {
   border: 1px solid #FFF;
 }
