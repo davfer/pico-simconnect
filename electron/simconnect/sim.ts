@@ -106,7 +106,7 @@ export class Sim {
     }
 
     public register(descriptor: Descriptor) {
-        console.log("registering descriptor:", descriptor);
+        console.log("registering descriptor:", descriptor.id);
         if (this.definitions.some(d => d.id === descriptor.id)) {
             throw new Error(`Watcher with ID ${descriptor.id} already registered`);
         }
@@ -148,7 +148,7 @@ export class Sim {
             throw new Error('SimConnect not connected');
         }
 
-        console.log(`Subscribing to definition: ${descriptor.id}`, descriptor);
+        console.log(`Subscribing to definition: ${descriptor.id}`);
         if (descriptor.type === 'data') {
             const dDescriptor = descriptor as DataDescriptor;
             this.sim.mapClientDataNameToID(dDescriptor.dataName, dDescriptor.dataId);

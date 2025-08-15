@@ -106,6 +106,7 @@ export default class Device {
 
     private async startPolling() {
         // Start polling logic here if needed
+        console.info('start polling...')
         this.pollingId = setInterval(async () => {
             if (!this.device) {
                 console.warn('Device not opened, cannot poll');
@@ -114,10 +115,10 @@ export default class Device {
 
             try {
                 const response = await this.sendCmd(CMD_READ_PINS_MASKED, []);
-                //console.trace('Response reading pins:', response);
+                console.trace('Response reading pins:', response);
                 await this.parsePollingResponse(response)
             } catch (error) {
-                // console.error('Error during polling:', error); // TODO
+                console.error('Error during polling:', error); // TODO
             }
         }, this.pollingMs);
     }

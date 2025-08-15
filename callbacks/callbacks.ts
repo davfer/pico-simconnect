@@ -13,7 +13,7 @@ export interface ParsedCDUData {
 
 export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
     CduScreenReadFn: async (descriptor: Descriptor, device: Device, value: ParsedCDUData) => {
-        log.log("CduScreenReadFn", descriptor, device, value)
+        // log.log("CduScreenReadFn", descriptor, device, value)
 
         for (let y = 0; y < value.CduDataLines.length; y++) {
             // Will send 2 commands of 12 cells each
@@ -62,7 +62,7 @@ export const onDataParserEventCallbacks: Record<string, (data: RawBuffer) => any
         //console.log("CduScreenParseFn", data);
 
         const cduData = extractCduScreenState(data);
-        console.log("CduScreenParseFn", cduData);
+        // console.log("CduScreenParseFn", cduData);
 
         return {
             CduDataLines: cduData.lines,
