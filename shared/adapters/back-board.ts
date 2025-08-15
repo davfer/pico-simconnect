@@ -4,12 +4,11 @@ import {BrowserWindow} from "electron";
 import {ISim} from "@electron/simconnect/sim.types.ts";
 import {Mocksim} from "@electron/simconnect/mocksim.ts";
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
-import {Sim} from "@electron/simconnect/sim.ts";
 
 export class BackBoard {
     private boards = new Map<string, Board>();
-    private sim: ISim = new Sim();
-    // private sim: ISim = new Mocksim();
+    //private sim: ISim = new Sim();
+    private sim: ISim = new Mocksim();
 
     constructor(private ipc: Electron.IpcMain, private mainWindow: BrowserWindow) {
         console.info("BackBoard: Initializing...");

@@ -1,9 +1,9 @@
 import {OnDeviceReadEventCallback, OnSimReadEventCallback} from "@shared/adapters/ipc.types";
 import {DataDefinition, Descriptor} from "@shared/sim.types";
-import Device from "@electron/usb/device";
 import {CduCell, extractCduScreenState} from "@src/features/fmc/fmc.types.ts";
 import {RawBuffer} from "node-simconnect";
 import log from "electron-log/main";
+import Usb from "@electron/usb/usb.ts";
 
 export interface ParsedCDUData {
     CduDataLines: CduCell[][]
@@ -11,7 +11,7 @@ export interface ParsedCDUData {
 }
 
 export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
-    CduScreenReadFn: async (_: Descriptor, device: Device, value: ParsedCDUData) => {
+    CduScreenReadFn: async (_: Descriptor, device: Usb, value: ParsedCDUData) => {
         // log.log("CduScreenReadFn", descriptor, device, value)
 
         for (let y = 0; y < value.CduDataLines.length; y++) {
@@ -49,7 +49,7 @@ export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
         }
     },
 
-    MultipanelSimDataReadFn: async (descriptor: Descriptor, device: Device, value: any) => {
+    MultipanelSimDataReadFn: async (descriptor: Descriptor, device: Usb, value: any) => {
         log.log("MultipanelSimDataReadFn", descriptor, device, value)
         // Handle multipanel data read
         // This is a placeholder for actual implementation

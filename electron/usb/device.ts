@@ -1,55 +1,16 @@
-import {devices, HID} from 'node-hid'
-import {
-    BoardButton,
-    BoardInterface,
-    BoardInterfaceType,
-    BoardInterfaceValue,
-    BoardLed
-} from "../../shared/board.types.ts";
-import {UsbDevice} from "../../shared/usb.types.ts";
+import {BoardButton, BoardInterface, BoardInterfaceType, BoardInterfaceValue, BoardLed} from "@shared/board.types.ts";
+import Usb from "@electron/usb/usb.ts";
 
 const CMD_TRIGGER_PIN = 0x03;
 const CMD_READ_PINS_MASKED = 0x05;
 
 export type BoardInterfaceChangeCallback = (value: BoardInterfaceValue) => void
 
-export default class Device {
-    private device: HID | null = null;
+export default class Device extends Usb {
     private listeners = new Map<string, (value: BoardInterfaceValue) => void>();
-    private pollingId: NodeJS.Timeout | null = null;
 
-    constructor(private vendorId: number, private productId: number, private interfaces: BoardInterface[], private pollingMs: number = 1000) {
-    }
-
-    static list(): UsbDevice[] {
-        return devices().map(device => {
-            return {
-                vid: device.vendorId,
-                pid: device.productId,
-                product: device.product || 'Unknown Device'
-            }
-        })
-    }
-
-    public async open() {
-        if (this.device) {
-            console.warn(`Device already opened: ${this.vendorId}:${this.productId}`);
-            return;
-        }
-        if (this.vendorId === 0 || this.productId === 0) {
-            throw new Error(`Invalid vendorId or productId: ${this.vendorId}:${this.productId}`);
-        }
-        try {
-            this.device = new HID(this.vendorId, this.productId);
-            console.log(`Device opened: ${this.vendorId}:${this.productId}`);
-        } catch (error) {
-            console.error(`Failed to open device ${this.vendorId}:${this.productId}`, error);
-            throw error;
-        }
-
-        if (this.pollingMs >= 0) {
-            await this.startPolling();
-        }
+    constructor(vendorId: number, productId: number, private readonly interfaces: BoardInterface[], pollingMs: number = 1000) {
+        super(vendorId, productId, pollingMs);
     }
 
     async trigger(id: string, value: number): Promise<BoardInterface> {
@@ -95,31 +56,14 @@ export default class Device {
         this.listeners.delete(id);
     }
 
-    async close() {
-        if (this.device) {
-            this.device.close();
-            this.device = null;
-            this.pollingId?.close()
-            console.log(`Device closed: ${this.vendorId}:${this.productId}`);
+    protected async pollDevice() {
+        try {
+            const response = await this.sendCmd(CMD_READ_PINS_MASKED, []);
+            //console.trace('Response reading pins:', response);
+            await this.parsePollingResponse(response)
+        } catch (error) {
+            // console.error('Error during polling:', error); // TODO
         }
-    }
-
-    private async startPolling() {
-        // Start polling logic here if needed
-        this.pollingId = setInterval(async () => {
-            if (!this.device) {
-                console.warn('Device not opened, cannot poll');
-                return
-            }
-
-            try {
-                const response = await this.sendCmd(CMD_READ_PINS_MASKED, []);
-                //console.trace('Response reading pins:', response);
-                await this.parsePollingResponse(response)
-            } catch (error) {
-                // console.error('Error during polling:', error); // TODO
-            }
-        }, this.pollingMs);
     }
 
     private async parsePollingResponse(response: number[]) {

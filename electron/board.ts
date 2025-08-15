@@ -4,14 +4,16 @@ import {onDataParserEventCallbacks, onDeviceReadEventCallbacks, onSimReadEventCa
 import {ISim} from "@electron/simconnect/sim.types.ts";
 import {DataDefinition, DataDefinitionType, DataDescriptor, EventCallback, ReadDescriptor} from "@shared/sim.types.ts";
 import {RawBuffer} from "node-simconnect";
+import Winwing from "@electron/usb/winwing.ts";
+import Usb from "@electron/usb/usb.ts";
 
 export default class Board {
-    private readonly device: Device;
+    private readonly device: Usb;
     private listeners = new Map<string, (id: string, value: number) => void>();
 
-    constructor(private sim: ISim, vendorId: number, productId: number, private items: BoardItem[]) {
+    constructor(private sim: ISim, vendorId: number, productId: number, private items: BoardItem[], driver: "default" | "winwing" = "default") {
         const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
-        this.device = new Device(vendorId, productId, interfaces, 10000);
+        this.device = driver == "winwing" ? new Winwing(vendorId, productId, interfaces, 10000) : new Device(vendorId, productId, interfaces, 500);
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
