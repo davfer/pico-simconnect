@@ -67,12 +67,10 @@ export default class Device {
         }
 
         const led = iface as BoardLed;
-
-        // Example command to send to the device
-        const cmd = CMD_TRIGGER_PIN; // Example command for triggering a button
-        const data = [led?.offset, value !== 0 ? 1 : 0]; // Example data format
-
-        await this.sendCmd(cmd, data);
+        if (led?.offset === undefined) {
+            throw new Error(`LED with id ${id} does not have an offset defined`);
+        }
+        await this.sendCmd(CMD_TRIGGER_PIN, [led?.offset, value !== 0 ? 1 : 0]);
 
         return iface
     }
@@ -173,7 +171,7 @@ export default class Device {
             throw new Error('Device not opened');
         }
         this.device.write([cmd, ...data]);
-        //log.log(`Command ${cmd} sent with data:`, data);
+        console.log(`Command ${cmd} sent with data:`, JSON.stringify([cmd, ...data]));
 
         const res = this.device.readSync();
         if (!res.length || res[0] !== 0) {

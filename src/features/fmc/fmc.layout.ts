@@ -864,7 +864,8 @@ export const FMC_LAYOUT = [
             id: "cdu_Z",
             simid: FMC_SIMIDS.CDU_Z,
             hwid: EVT_CDU_L_Z,
-            type: "write"
+            type: "write",
+            flags: {"pressrelease": true}
         } as WriteDescriptor
     },
     {
@@ -908,7 +909,8 @@ export const FMC_LAYOUT = [
             id: "cdu_CLR",
             simid: FMC_SIMIDS.CDU_CLR,
             hwid: EVT_CDU_L_CLR,
-            type: "write"
+            type: "write",
+            flags: {"pressrelease": true}
         } as WriteDescriptor
     },
     {

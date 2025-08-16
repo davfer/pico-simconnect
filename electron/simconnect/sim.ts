@@ -9,6 +9,7 @@ import {
     SimConnectConstants
 } from "node-simconnect";
 import {DataDescriptor, Descriptor, WriteDescriptor} from "@shared/sim.types.ts";
+import {MOUSE_FLAG_LEFTRELEASE, MOUSE_FLAG_LEFTSINGLE} from "@shared/definitions/PMDG_NGX_SDK.ts";
 
 const EVENT_ID_PAUSE = 1;
 
@@ -134,13 +135,31 @@ export class Sim {
         // dataToSet.writeInt32(value)
         // this.sim.setClientData(def.dataId, def.dataDefinition, 0, 0, 64, dataToSet.getBuffer()) // 64 bits
 
-        this.sim.transmitClientEvent(
-            SimConnectConstants.OBJECT_ID_USER,
-            def.simid,
-            value,
-            1,
-            EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
-        );
+        if (def.flags['pressrelease']) {
+            // TODO: just to try
+            this.sim.transmitClientEvent(
+                SimConnectConstants.OBJECT_ID_USER,
+                def.simid,
+                MOUSE_FLAG_LEFTSINGLE,
+                1, // NotificationPriority.HIGHEST, // 1
+                EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
+            )
+            this.sim.transmitClientEvent(
+                SimConnectConstants.OBJECT_ID_USER,
+                def.simid,
+                MOUSE_FLAG_LEFTRELEASE,
+                1, // NotificationPriority.HIGHEST, // 1
+                EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
+            )
+        } else {
+            this.sim.transmitClientEvent(
+                SimConnectConstants.OBJECT_ID_USER,
+                def.simid,
+                value,
+                1, // NotificationPriority.HIGHEST, // 1
+                EventFlag.EVENT_FLAG_GROUPID_IS_PRIORITY
+            )
+        }
     }
 
     private subscribeToSim(descriptor: Descriptor) {

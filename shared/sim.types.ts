@@ -7,6 +7,7 @@ export interface Descriptor {
     simid: number; // ClientEventID (RequestID)
     callback?: EventCallback;
     type: 'data' | 'write' | 'read';
+    flags: Record<string, any>
 }
 
 export interface WriteDescriptor extends Descriptor {
