@@ -36,6 +36,19 @@ export const onSimReadEventCallbacks: Record<string, OnSimReadEventCallback> = {
                     case 0xA4: // Down Arrow
                         cduCell.symbolNum = 0x83
                         break
+                    // TODO
+                    case 176:
+                        cduCell.symbolNum = 0x39
+                        break
+                    // case 85:
+                    //     cduCell.symbolNum = 0x33
+                    //     break
+                }
+
+                switch (cduCell.flags) {
+                    case 4:
+                        cduCell.flags = 0x01
+                        break
                 }
 
                 bytesToSend.push(cduCell.symbolNum)

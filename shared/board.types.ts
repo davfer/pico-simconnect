@@ -32,8 +32,9 @@ export interface BoardButton extends BoardInterface {
 }
 
 export interface BoardLed extends BoardInterface {
-    offset: number;
+    offset: number | number[];
     value: BoardInterfaceValue
+    inversed: boolean
 }
 
 export interface BoardInterfaceValue {

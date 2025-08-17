@@ -7,6 +7,7 @@ import {
     BoardLed
 } from "../../shared/board.types.ts";
 import {UsbDevice} from "../../shared/usb.types.ts";
+import {Mutex} from "async-mutex";
 
 const CMD_TRIGGER_PIN = 0x03;
 const CMD_READ_PINS_MASKED = 0x05;
@@ -17,6 +18,8 @@ export default class Device {
     private device: HID | null = null;
     private listeners = new Map<string, (value: BoardInterfaceValue) => void>();
     private pollingId: NodeJS.Timeout | null = null;
+    private mutex = new Mutex();
+
 
     constructor(private vendorId: number, private productId: number, private interfaces: BoardInterface[], private pollingMs: number = 1000) {
     }
@@ -53,6 +56,7 @@ export default class Device {
     }
 
     async trigger(id: string, value: number): Promise<BoardInterface> {
+
         if (!this.device) {
             throw new Error('Device not opened');
         }
@@ -70,7 +74,18 @@ export default class Device {
         if (led?.offset === undefined) {
             throw new Error(`LED with id ${id} does not have an offset defined`);
         }
-        await this.sendCmd(CMD_TRIGGER_PIN, [led?.offset, value !== 0 ? 1 : 0]);
+
+        const offsets: number[] =
+            typeof led.offset === "number"
+                ? [led.offset]
+                : Array.from(led.offset);
+        for (const [i, o] of offsets.entries()) {
+            //console.log(`Triggering USB for ${id}->${o} [${i + 1}/${offsets.length}] with value:`, value);
+            try {
+                await this.sendCmd(CMD_TRIGGER_PIN, [o, value]);
+            } catch (err) {
+                console.error(`sendCmd failed for ${id}->${o} [${i + 1}/${offsets.length}]`, err);
+            }        }
 
         return iface
     }
@@ -112,8 +127,8 @@ export default class Device {
             }
 
             try {
-                const response = await this.sendCmd(CMD_READ_PINS_MASKED, []);
-                console.trace('Response reading pins:', response);
+                const response = await this.sendCmd(CMD_READ_PINS_MASKED, [1]);
+                // console.trace('Response reading pins:', response);
                 await this.parsePollingResponse(response)
             } catch (error) {
                 console.error('Error during polling:', error); // TODO
@@ -134,10 +149,6 @@ export default class Device {
                 const pinOffset = inputBlockOffset + bit;
                 const pinValue = (response[i] >> bit) & 1;
 
-                if (pinValue === 1) {
-                    console.info(`Pin ${pinOffset} is HIGH`);
-                }
-
                 const iface = this.interfaces.filter(i => i?.type === BoardInterfaceType.BUTTON).find(i => (i as BoardButton)?.offset === pinOffset) as BoardButton | undefined;
                 if (!iface) {
                     continue
@@ -154,7 +165,7 @@ export default class Device {
                         lastValueChange: new Date(),
                         previousValue: iface?.value?.value
                     };
-                    iface.value = value;
+                    iface.value = value;// TODO not pointer
 
                     try {
                         listener(value);
@@ -170,14 +181,16 @@ export default class Device {
         if (!this.device) {
             throw new Error('Device not opened');
         }
-        this.device.write([cmd, ...data]);
-        console.log(`Command ${cmd} sent with data:`, JSON.stringify([cmd, ...data]));
+        return this.mutex.runExclusive(async () => {
+            //console.log(`Command ${cmd} sent with data:`, [cmd, ...data]);
+            this.device.write([0x00, cmd, ...data])
 
-        const res = this.device.readSync();
-        if (!res.length || res[0] !== 0) {
-            throw new Error('liaf');
-        }
+            const res = this.device.readSync()
+            if (!res.length || res[0] !== 0) {
+                throw new Error('liaf: REQ: '+JSON.stringify([0x00, cmd, ...data])+' RES:' + JSON.stringify(res))
+            }
 
-        return res.slice(1)
+            return res.slice(1)
+        })
     }
 }

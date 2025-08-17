@@ -156,7 +156,7 @@ export const FMC_LAYOUT = [
     {
         id: "CDU_L1",
         front: {style: "rectangle-sm", value: "-"},
-        iface: {id: 'b_l1', type: BoardInterfaceType.BUTTON, offset: 79} as BoardButton,
+        iface: {id: 'b_l1', type: BoardInterfaceType.BUTTON, offset: 79, } as BoardButton,
         sim: {
             id: "cdu_L1",
             simid: FMC_SIMIDS.CDU_L1,
@@ -914,9 +914,9 @@ export const FMC_LAYOUT = [
         } as WriteDescriptor
     },
     {
-        id: "CDU_EXEC_LIGHT",
+        id: "CDU_EXEC_LIGHT", //35-39, 44-47
         front: {style: "square"},
-        iface: {id: 'l_exec', type: BoardInterfaceType.LED} as BoardLed,
+        iface: {id: 'l_exec', type: BoardInterfaceType.LED, offset: 40, inversed: true} as BoardLed,
         sim: {
             id: "cdu_EXEC_light",
             type: "read",
@@ -927,7 +927,7 @@ export const FMC_LAYOUT = [
     {
         id: "CDU_CALL_LIGHT",
         front: {style: "rectangle"},
-        iface: {id: 'l_call', type: BoardInterfaceType.LED} as BoardLed,
+        iface: {id: 'l_call', type: BoardInterfaceType.LED, offset: [41,42], inversed: true} as BoardLed,
         sim: {
             id: "cdu_CALL_light",
             type: "read",
@@ -938,19 +938,19 @@ export const FMC_LAYOUT = [
     {
         id: "CDU_FAIL_LIGHT",
         front: {style: "rectangle"},
-        iface: {id: 'l_fail', type: BoardInterfaceType.LED} as BoardLed,
+        iface: {id: 'l_fail', type: BoardInterfaceType.LED, offset: [32,33], inversed: true} as BoardLed,
         sim: {id: "cdu_FAIL_light", type: "read", simid: FMC_SIMIDS.PMDG_DATA, name: "CDU_annunFAIL"} as ReadDescriptor
     },
     {
         id: "CDU_MSG_LIGHT",
         front: {style: "rectangle"},
-        iface: {id: 'l_msg', type: BoardInterfaceType.LED} as BoardLed,
+        iface: {id: 'l_msg', type: BoardInterfaceType.LED, offset: [34,35], inversed: true} as BoardLed,
         sim: {id: "cdu_MSG_light", type: "read", simid: FMC_SIMIDS.PMDG_DATA, name: "CDU_annunMSG"} as ReadDescriptor
     },
     {
         id: "CDU_OFST_LIGHT",
         front: {style: "rectangle"},
-        iface: {id: 'l_ofst', type: BoardInterfaceType.LED} as BoardLed,
+        iface: {id: 'l_ofst', type: BoardInterfaceType.LED, offset: [43,44], inversed: true} as BoardLed,
         sim: {id: "cdu_OFST_light", type: "read", simid: FMC_SIMIDS.PMDG_DATA, name: "CDU_annunOFST"} as ReadDescriptor
     },
     {

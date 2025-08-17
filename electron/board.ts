@@ -1,4 +1,4 @@
-import {BoardInterface, BoardInterfaceType, BoardItem} from "@shared/board.types.ts";
+import {BoardInterface, BoardInterfaceType, BoardItem, BoardLed} from "@shared/board.types.ts";
 import Device from "./usb/device.ts";
 import {onDataParserEventCallbacks, onDeviceReadEventCallbacks, onSimReadEventCallbacks} from "@callbacks/callbacks.ts";
 import {ISim} from "@electron/simconnect/sim.types.ts";
@@ -10,7 +10,7 @@ export default class Board {
 
     constructor(private sim: ISim, vendorId: number, productId: number, private items: BoardItem[]) {
         const interfaces = items.filter(item => !!item.iface).map(item => item.iface) as BoardInterface[];
-        this.device = new Device(vendorId, productId, interfaces, 500);
+        this.device = new Device(vendorId, productId, interfaces, 100);
         for (const item of items) {
             // Register into the sim the board items that have a sim property
             if (item.sim) {
@@ -46,7 +46,7 @@ export default class Board {
     }
 
     private itemCallbackHandler(item : BoardItem) : EventCallback {
-        return (cbDescriptor, value) => {
+        return async (cbDescriptor, value) => {
             let data = value
 
             // Can we parse the raw data?
@@ -65,7 +65,7 @@ export default class Board {
                             if (readItem?.sim?.callback) {
                                 //console.info(`Triggering SIM READ for ${key} with value ${val}`);
                                 try {
-                                    readItem.sim.callback(readItem.sim, val as any);
+                                    await readItem.sim.callback(readItem.sim, val as any);
                                 } catch (err) {
                                     // not our problem
                                 }
@@ -80,6 +80,23 @@ export default class Board {
                 if (eventCallback) {
                     // console.info(`Triggering FRONTEND for ${item.id} with value ${data}`);
                     eventCallback(item.id, data);
+                }
+
+                // Pass it to usb?
+                if (item.iface?.type == BoardInterfaceType.LED) {
+                    const lIface = item.iface as BoardLed
+                    // console.info(`Triggering callback for ${cbDescriptor.id} with value ${value}`);
+
+                    let sendVal = value
+                    if (value instanceof Array) {
+                        sendVal = value[0] ? 1 : 0
+                    }
+
+                    try {
+                        await this.trigger(item.id, lIface.inversed ? (sendVal === 0 ? 1 : 0) : sendVal)
+                    } catch (err) {
+
+                    }
                 }
             }
 
